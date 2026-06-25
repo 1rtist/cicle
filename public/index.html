@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cicle — listing scanner</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f9f9f7; --surface: #ffffff; --surface2: #f2f2ef; --surface3: #eaeae6;
+  --text: #1a1a18; --text2: #5a5a55; --text3: #9a9a93;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14); --border3: rgba(0,0,0,0.24);
+  --accent: #1a1a18; --accent-fg: #f9f9f7;
+  --blue: #2563EB; --blue-bg: #EFF6FF; --blue-border: #BFDBFE;
+  --green: #16A34A; --green-bg: #F0FDF4; --green-border: #BBF7D0;
+  --amber: #D97706; --amber-bg: #FFFBEB; --amber-border: #FDE68A;
+  --red: #DC2626; --red-bg: #FEF2F2; --red-border: #FECACA;
+  --r: 8px; --r-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111110; --surface: #1c1c1a; --surface2: #252523; --surface3: #2e2e2b;
+    --text: #f0f0ec; --text2: #9a9a93; --text3: #5a5a55;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13); --border3: rgba(255,255,255,0.22);
+    --accent: #f0f0ec; --accent-fg: #111110;
+    --blue: #60A5FA; --blue-bg: rgba(37,99,235,0.12); --blue-border: rgba(37,99,235,0.35);
+    --green: #4ADE80; --green-bg: rgba(22,163,74,0.12); --green-border: rgba(22,163,74,0.35);
+    --amber: #FCD34D; --amber-bg: rgba(217,119,6,0.12); --amber-border: rgba(217,119,6,0.35);
+    --red: #F87171; --red-bg: rgba(220,38,38,0.12); --red-border: rgba(220,38,38,0.35);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.logo { font-size: 16px; font-weight: 600; letter-spacing: -0.4px; }
+.logo-sub { font-size: 13px; color: var(--text3); }
+.tabs { display: flex; gap: 2px; }
+.tab { padding: 6px 13px; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text2); cursor: pointer; border-radius: var(--r); font-family: inherit; transition: all 0.12s; }
+.tab:hover { background: var(--surface2); color: var(--text); }
+.tab.active { background: var(--surface2); color: var(--text); }
+.tab .cnt { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 99px; background: var(--surface3); color: var(--text2); font-size: 10px; padding: 0 4px; margin-left: 4px; }
+.tab.active .cnt { background: var(--accent); color: var(--accent-fg); }
+.topbar-right { margin-left: auto; }
+.panels { flex: 1; overflow: hidden; position: relative; }
+.panel { position: absolute; inset: 0; overflow-y: auto; padding: 20px; display: none; }
+.panel.active { display: block; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
+.btn-dark { background: var(--accent); color: var(--accent-fg); }
+.btn-dark:hover:not(:disabled) { opacity: 0.82; }
+.btn-dark:disabled { opacity: 0.32; cursor: not-allowed; }
+.btn-outline { background: none; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--border3); color: var(--text); }
+.btn-ghost { background: none; border: none; color: var(--text2); }
+.btn-ghost:hover { color: var(--text); background: var(--surface2); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-danger { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); }
+.btn-danger:hover { opacity: 0.82; }
+
+/* forms */
+.lbl { display: block; font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+input[type=text], input[type=number], textarea, select { width: 100%; padding: 8px 10px; border: 1px solid var(--border2); border-radius: var(--r); font-size: 14px; color: var(--text); background: var(--surface); font-family: inherit; line-height: 1.5; transition: border-color 0.12s; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--border3); box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
+textarea { resize: vertical; min-height: 72px; }
+select { appearance: none; cursor: pointer; }
+.field { margin-bottom: 14px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:500px) { .two-col { grid-template-columns: 1fr; } }
+
+/* scan panel */
+.drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--r-lg); padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.12s; }
+.drop-zone:hover, .drop-zone.over { background: var(--surface); border-color: var(--border3); }
+.dz-icon { font-size: 32px; margin-bottom: 10px; }
+.drop-zone h3 { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.drop-zone p { font-size: 13px; color: var(--text2); }
+.preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px,1fr)); gap: 8px; margin: 14px 0; }
+.thumb { position: relative; aspect-ratio: 1; border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); background: var(--surface2); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.thumb .rm { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.65); border: none; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.progress-list { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin: 14px 0; background: var(--surface); }
+.prog-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+.prog-item:last-child { border-bottom: none; }
+.prog-item img { width: 38px; height: 38px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.prog-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text2); }
+.prog-status { font-size: 12px; flex-shrink: 0; }
+.s-wait { color: var(--text3); } .s-run { color: var(--blue); } .s-done { color: var(--green); } .s-err { color: var(--red); }
+
+/* inventory */
+.inv-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.inv-toolbar input { max-width: 200px; }
+.inv-toolbar select { width: auto; padding: 7px 28px 7px 10px; font-size: 13px; }
+.inv-ct { font-size: 13px; color: var(--text2); margin-left: auto; }
+.inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px,1fr)); gap: 12px; }
+.inv-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow); }
+.inv-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); transform: translateY(-1px); }
+.inv-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface2); display: block; }
+.inv-body { padding: 10px; }
+.inv-cond { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+.inv-title { font-size: 13px; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-price { font-size: 15px; font-weight: 600; }
+.inv-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.inv-pill { display: inline-block; margin-top: 5px; font-size: 11px; padding: 2px 7px; border-radius: 99px; }
+.p-unlisted { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+.p-listed { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+.p-sold { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+/* detail page */
+.detail-page { position: fixed; inset: 0; background: var(--bg); z-index: 100; overflow-y: auto; display: none; }
+.detail-page.open { display: block; }
+.detail-bar { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
+.detail-bar h2 { font-size: 15px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.detail-wrap { max-width: 860px; margin: 0 auto; padding: 24px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+@media(max-width:620px) { .detail-wrap { grid-template-columns: 1fr; } }
+.detail-img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: var(--r-lg); background: var(--surface2); border: 1px solid var(--border); display: block; }
+.sec-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); margin: 20px 0 10px; }
+.sec-lbl:first-child { margin-top: 0; }
+.price-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.det-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+.det-actions .btn { flex: 1; min-width: 110px; }
+.ebay-btn { background: var(--blue-bg); border: 1px solid var(--blue-border); color: var(--blue); }
+.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; margin-bottom: 8px; }
+.note-card p { font-size: 13px; }
+.note-time { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.add-note-row { display: flex; gap: 8px; margin-top: 8px; }
+.hist-item { font-size: 12px; color: var(--text2); padding: 6px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 6px; }
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.rerun-box { background: var(--surface2); border-radius: var(--r); padding: 12px; }
+.rerun-box p { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.rerun-row { display: flex; gap: 8px; align-items: flex-end; }
+.rerun-row textarea { min-height: 48px; font-size: 13px; flex: 1; }
+
+/* misc */
+.empty-state { text-align: center; padding: 52px 20px; color: var(--text2); }
+.empty-state .ei { font-size: 36px; margin-bottom: 10px; }
+.spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner-dark { border: 2px solid var(--border2); border-top-color: var(--text2); }
+@keyframes spin { to { transform: rotate(360deg); } }
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 99px; font-size: 13px; z-index: 9999; display: none; white-space: nowrap; box-shadow: var(--shadow-lg); pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="logo">cicle</span>
+    <span class="logo-sub">listing scanner</span>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('scan')" id="t-scan">scan</button>
+      <button class="tab" onclick="switchTab('inv')" id="t-inv">inventory <span class="cnt" id="c-inv">0</span></button>
+    </div>
+  </div>
+
+  <div class="panels">
+    <!-- SCAN -->
+    <div class="panel active" id="p-scan">
+      <div class="drop-zone" id="dropZone"
+        onclick="document.getElementById('fi').click()"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="this.classList.remove('over');handleDrop(event)">
+        <div class="dz-icon">📷</div>
+        <h3>Drop photos here or tap to browse</h3>
+        <p>jpg, png, webp, heic — one item per photo</p>
+      </div>
+      <input type="file" id="fi" accept="image/*,.heic,.heif,image/heic,image/heif" multiple style="display:none" onchange="handleFiles(this.files)">
+      <div class="preview-grid" id="previewGrid"></div>
+      <div id="progressList" style="display:none"></div>
+      <button class="btn btn-dark" id="analyzeBtn" disabled onclick="runAnalysis()" style="width:100%;margin-top:4px">Analyze with AI → add to inventory</button>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="panel" id="p-inv">
+      <div class="inv-toolbar">
+        <input type="text" placeholder="search..." id="invSearch" oninput="renderInv()" style="max-width:200px">
+        <select id="invSort" onchange="renderInv()">
+          <option value="newest">newest</option>
+          <option value="oldest">oldest</option>
+          <option value="price-high">price ↓</option>
+          <option value="price-low">price ↑</option>
+        </select>
+        <select id="invSF" onchange="renderInv()">
+          <option value="all">all</option>
+          <option value="unlisted">unlisted</option>
+          <option value="listed">listed</option>
+          <option value="sold">sold</option>
+        </select>
+        <span class="inv-ct" id="invCt"></span>
+      </div>
+      <div class="inv-grid" id="invGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div class="detail-page" id="detailPage">
+  <div class="detail-bar">
+    <button class="btn btn-ghost btn-sm" onclick="closeDetail()">← back</button>
+    <h2 id="detailTitle"></h2>
+    <button class="btn btn-sm btn-danger" onclick="deleteItem()">Delete</button>
+  </div>
+  <div class="detail-wrap" id="detailWrap"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STORAGE — IndexedDB ─────────────────────────────────────
+const IDB_NAME = 'cicle';
+const IDB_STORE = 'images';
+let _idb = null;
+
+function openIDB() {
+  if (_idb) return Promise.resolve(_idb);
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess = e => { _idb = e.target.result; res(_idb); };
+    req.onerror = () => rej(req.error);
+  });
+}
+function idbPut(key, value) {
+  return openIDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(value, key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  }));
+}
+function idbGet(key) {
+  return openIDB().then(db => new Promise((res, rej) => {
+    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
+    req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
+  }));
+}
+function idbDelete(key) {
+  return openIDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  }));
+}
+
+const DB = {
+  loadMeta() {
+    try { return JSON.parse(localStorage.getItem('cicle_meta')||'[]'); } catch { return []; }
+  },
+  saveMeta(inv) {
+    const meta = inv.map(({ dataUrl, ...rest }) => rest);
+    try { localStorage.setItem('cicle_meta', JSON.stringify(meta)); } catch(e) { console.error('Meta save failed', e); }
+  },
+  async saveImage(id, dataUrl) {
+    try { await idbPut(id, dataUrl); } catch(e) { console.error('Image save failed', e); }
+  },
+  async deleteImage(id) {
+    try { await idbDelete(id); } catch(e) { console.error('Image delete failed', e); }
+  },
+  async loadImages(inv) {
+    await Promise.all(inv.map(async item => {
+      try { item.dataUrl = await idbGet(item.id) || null; } catch { item.dataUrl = null; }
+    }));
+    return inv;
+  }
+};
+
+// ── STATE ───────────────────────────────────────────────────
+let pending = [];
+let inventory = [];
+let currentId = null;
+
+async function initInventory() {
+  const meta = DB.loadMeta();
+  inventory = await DB.loadImages(meta);
+  updateCounts();
+  if (document.getElementById('p-inv').classList.contains('active')) renderInv();
+}
+
+// ── TABS ────────────────────────────────────────────────────
+function switchTab(t) {
+  ['scan','inv'].forEach(n => {
+    document.getElementById('p-'+n).classList.toggle('active', n===t);
+    document.getElementById('t-'+n).classList.toggle('active', n===t);
+  });
+  if (t==='inv') renderInv();
+}
+function updateCounts() {
+  document.getElementById('c-inv').textContent = inventory.length;
+}
+
+// ── FILE HANDLING ───────────────────────────────────────────
+function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); }
+
+async function handleFiles(files) {
+  for (const f of Array.from(files)) {
+    const isHeic = /\.(heic|heif)$/i.test(f.name) || f.type === 'image/heic' || f.type === 'image/heif';
+    const idx = pending.length;
+    pending.push({ name: f.name, dataUrl: null, type: 'image/jpeg' });
+    renderPreviews();
+    try {
+      const dataUrl = await imageViaCanvas(f);
+      const newName = isHeic ? f.name.replace(/\.(heic|heif)$/i, '.jpg') : f.name;
+      pending[idx] = { name: newName, dataUrl, type: 'image/jpeg' };
+    } catch (err) {
+      pending.splice(idx, 1);
+      toast(isHeic
+        ? 'HEIC needs Safari on iPhone — or share as JPG from Photos, then upload that'
+        : 'Could not read file: ' + f.name);
+    }
+    renderPreviews();
+  }
+}
+
+function imageViaCanvas(file, maxDim = 1600) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { width: w, height: h } = img;
+        if (w > maxDim || h > maxDim) {
+          const ratio = Math.min(maxDim / w, maxDim / h);
+          w = Math.round(w * ratio); h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      } catch(e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode image')); };
+    img.src = url;
+  });
+}
+
+function renderPreviews() {
+  document.getElementById('previewGrid').innerHTML = pending.map((img, i) => `
+    <div class="thumb">
+      ${img.dataUrl ? `<img src="${img.dataUrl}" alt="">` : '<div style="width:100%;height:100%;background:var(--surface3)"></div>'}
+      ${img.dataUrl ? `<button class="rm" onclick="rmPending(${i})">✕</button>` : ''}
+    </div>`).join('');
+  document.getElementById('analyzeBtn').disabled = !pending.some(p => p.dataUrl);
+}
+function rmPending(i) { pending.splice(i, 1); renderPreviews(); }
+
+// ── AI ANALYSIS ─────────────────────────────────────────────
+async function runAnalysis() {
+  const batch = pending.filter(p => p.dataUrl);
+  if (!batch.length) return;
+  pending = []; renderPreviews();
+
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  document.getElementById('dropZone').style.display = 'none';
+
+  const statuses = batch.map(() => 'waiting');
+  showProgress(batch, statuses);
+
+  for (let i = 0; i < batch.length; i++) {
+    statuses[i] = 'analyzing'; showProgress(batch, statuses);
+    try {
+      const r = await callAI(batch[i]);
+      const entry = makeEntry(r, batch[i]);
+      inventory.unshift(entry);
+      DB.saveMeta(inventory);
+      updateCounts();
+      statuses[i] = 'done';
+    } catch(e) {
+      statuses[i] = 'error: ' + e.message;
+    }
+    showProgress(batch, statuses);
+  }
+
+  btn.disabled = false; btn.innerHTML = 'Analyze with AI → add to inventory';
+  document.getElementById('dropZone').style.display = '';
+  document.getElementById('progressList').style.display = 'none';
+
+  const done = statuses.filter(s => s === 'done').length;
+  const errs = statuses.filter(s => s.startsWith('error')).length;
+  if (done) toast(`${done} item${done > 1 ? 's' : ''} added to inventory ✓`);
+  if (errs) toast(`${errs} item${errs > 1 ? 's' : ''} failed`);
+  if (done) switchTab('inv');
+}
+
+async function callAI(img, extraNotes = '') {
+  const b64 = img.dataUrl.split(',')[1];
+  const res = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageData: b64, mediaType: 'image/jpeg', extraNotes })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.error || `HTTP ${res.status}`);
+  }
+  const parsed = await res.json();
+  const searchTerm = parsed.search_query || buildSearchQuery(parsed);
+  parsed.ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&LH_Sold=1&LH_Complete=1`;
+  parsed.ebayUrlActive = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&LH_Sold=0`;
+  return parsed;
+}
+
+function buildSearchQuery(parsed) {
+  const parts = [];
+  if (parsed.brand && parsed.brand !== 'Unknown') parts.push(parsed.brand);
+  if (parsed.model && parsed.model !== 'Unknown') parts.push(parsed.model);
+  if (parts.length < 2 && parsed.keywords && parsed.keywords[0]) parts.push(parsed.keywords[0]);
+  return parts.slice(0, 4).join(' ') || parsed.title.split(' ').slice(0, 3).join(' ');
+}
+
+function makeEntry(r, img) {
+  const id = uid();
+  DB.saveImage(id, img.dataUrl);
+  return {
+    id, dataUrl: img.dataUrl,
+    title: r.title, description: r.description,
+    condition: r.condition, price: r.price_suggested,
+    price_low: r.price_low, price_high: r.price_high,
+    brand: r.brand, model: r.model,
+    category: r.category, keywords: r.keywords || [],
+    search_query: r.search_query || buildSearchQuery(r),
+    ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive || r.ebayUrl,
+    status: 'unlisted',
+    notes: [], history: [`Added via AI scan — ${now()}`],
+    addedAt: new Date().toISOString()
+  };
+}
+
+function showProgress(batch, statuses) {
+  const el = document.getElementById('progressList');
+  el.style.display = 'block';
+  el.className = 'progress-list';
+  el.innerHTML = batch.map((img, i) => {
+    const st = statuses[i];
+    const cls = st === 'done' ? 's-done' : st === 'analyzing' ? 's-run' : st.startsWith('error') ? 's-err' : 's-wait';
+    const lbl = st === 'done' ? '✓ added' : st === 'analyzing' ? '⟳ analyzing...' : st.startsWith('error') ? '✕ ' + st : '— waiting';
+    return `<div class="prog-item"><img src="${img.dataUrl}" alt=""><span class="prog-name">${esc(img.name)}</span><span class="prog-status ${cls}">${lbl}</span></div>`;
+  }).join('');
+}
+
+// ── INVENTORY ───────────────────────────────────────────────
+function renderInv() {
+  const q = document.getElementById('invSearch').value.toLowerCase();
+  const sort = document.getElementById('invSort').value;
+  const sf = document.getElementById('invSF').value;
+
+  let items = inventory.filter(it => {
+    if (sf !== 'all' && it.status !== sf) return false;
+    if (q) return [it.title, it.brand, it.category, it.model].some(v => (v||'').toLowerCase().includes(q));
+    return true;
+  });
+
+  items = [...items].sort((a, b) =>
+    sort === 'newest' ? new Date(b.addedAt) - new Date(a.addedAt) :
+    sort === 'oldest' ? new Date(a.addedAt) - new Date(b.addedAt) :
+    sort === 'price-high' ? b.price - a.price : a.price - b.price
+  );
+
+  document.getElementById('invCt').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+  const grid = document.getElementById('invGrid');
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ei">📦</div><p>${q ? 'No matches.' : 'No inventory yet. Scan some items first.'}</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(item => `
+    <div class="inv-card" onclick="openDetail('${item.id}')">
+      <img src="${item.dataUrl}" alt="${esc(item.title)}" loading="lazy">
+      <div class="inv-body">
+        <div class="inv-cond">${esc(item.condition)} · ${esc(item.category)}</div>
+        <div class="inv-title" title="${esc(item.title)}">${esc(item.title)}</div>
+        <div class="inv-price">$${(item.price||0).toFixed(2)}</div>
+        <div class="inv-date">${new Date(item.addedAt).toLocaleDateString()}</div>
+        <span class="inv-pill p-${item.status||'unlisted'}">${item.status||'unlisted'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── DETAIL PAGE ─────────────────────────────────────────────
+function openDetail(id) {
+  const item = inventory.find(i => i.id === id); if (!item) return;
+  currentId = id;
+  document.getElementById('detailTitle').textContent = item.title;
+  buildDetail(item);
+  document.getElementById('detailPage').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detailPage').classList.remove('open');
+  document.body.style.overflow = '';
+  currentId = null; renderInv();
+}
+
+function buildDetail(item) {
+  const notes = (item.notes || []).length
+    ? item.notes.map(n => `<div class="note-card"><p>${esc(n.text)}</p><div class="note-time">${n.time}</div></div>`).join('')
+    : '<p style="font-size:13px;color:var(--text3);margin-bottom:8px">No notes yet.</p>';
+  const hist = (item.history || []).map(h => `<div class="hist-item">${esc(h)}</div>`).join('');
+  const showUrl = item.status === 'listed' || item.status === 'sold';
+  const showSale = item.status === 'sold';
+
+  document.getElementById('detailWrap').innerHTML = `
+    <div>
+      <img class="detail-img" src="${item.dataUrl}" alt="">
+      <div class="divider"></div>
+      <div class="sec-lbl">Re-run AI with extra context</div>
+      <div class="rerun-box">
+        <p>Add notes like model year, missing parts, damage, then re-analyze.</p>
+        <div class="rerun-row">
+          <textarea id="d-notes" placeholder="e.g. 2019 model, missing remote, cracked corner..."></textarea>
+          <button class="btn btn-outline btn-sm" onclick="rerunAI()">Re-run</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-lbl">Listing</div>
+      <div class="field"><label class="lbl">Title</label><input type="text" id="d-ti" value="${esc(item.title)}"></div>
+      <div class="field"><label class="lbl">Description</label><textarea id="d-de">${esc(item.description)}</textarea></div>
+      <div class="two-col">
+        <div class="field">
+          <label class="lbl">List price ($)</label>
+          <input type="number" id="d-pr" value="${item.price}" step="0.01">
+          <div class="price-hint">AI range: $${item.price_low||'?'} – $${item.price_high||'?'}</div>
+        </div>
+        <div class="field"><label class="lbl">Condition</label>
+          <select id="d-co">${['New','Like New','Very Good','Good','Acceptable','For Parts'].map(c=>`<option${c===item.condition?' selected':''}>${c}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label class="lbl">Brand</label><input type="text" id="d-br" value="${esc(item.brand||'')}"></div>
+        <div class="field"><label class="lbl">Model</label><input type="text" id="d-mo" value="${esc(item.model||'')}"></div>
+      </div>
+      <div class="field"><label class="lbl">Category</label><input type="text" id="d-ca" value="${esc(item.category||'')}"></div>
+      <div class="field">
+        <label class="lbl">eBay search query <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— edit for better comps</span></label>
+        <input type="text" id="d-sq" value="${esc(item.search_query||buildSearchQuery(item))}">
+      </div>
+      <div class="field"><label class="lbl">Status</label>
+        <select id="d-st" onchange="buildDetail(getCurrentItem())">
+          <option value="unlisted"${item.status==='unlisted'?' selected':''}>Unlisted</option>
+          <option value="listed"${item.status==='listed'?' selected':''}>Listed on eBay</option>
+          <option value="sold"${item.status==='sold'?' selected':''}>Sold</option>
+        </select>
+      </div>
+      ${showUrl ? `<div class="field"><label class="lbl">eBay listing URL</label><input type="text" id="d-lu" value="${esc(item.listingUrl||'')}" placeholder="https://ebay.com/itm/..."></div>` : ''}
+      ${showSale ? `<div class="field"><label class="lbl">Sale price ($)</label><input type="number" id="d-sp" value="${item.salePrice||''}" step="0.01"></div>` : ''}
+      <div class="det-actions">
+        <button class="btn btn-dark" onclick="saveDetail()">Save changes</button>
+        <a class="btn ebay-btn" href="${item.ebayUrl}" target="_blank">Sold comps</a>
+        <a class="btn ebay-btn" href="${item.ebayUrlActive||item.ebayUrl.replace('LH_Sold=1&LH_Complete=1','LH_Sold=0')}" target="_blank">Active</a>
+      </div>
+      <div class="divider"></div>
+      <div class="sec-lbl">Notes</div>
+      <div>
+        ${notes}
+        <div class="add-note-row">
+          <input type="text" id="d-ni" placeholder="Add a note..." style="flex:1">
+          <button class="btn btn-outline btn-sm" onclick="addNote()">Add</button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="sec-lbl">History</div>
+      <div>${hist || '<p style="font-size:13px;color:var(--text3)">No history.</p>'}</div>
+    </div>`;
+}
+
+function getCurrentItem() {
+  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return null;
+  const item = { ...inventory[idx] };
+  try { item.status = document.getElementById('d-st').value; } catch {}
+  return item;
+}
+
+function saveDetail() {
+  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
+  const item = inventory[idx];
+  const newStatus = document.getElementById('d-st').value;
+  const changed = newStatus !== item.status;
+  const sq = document.getElementById('d-sq')?.value || item.search_query;
+  inventory[idx] = {
+    ...item,
+    title: document.getElementById('d-ti').value,
+    description: document.getElementById('d-de').value,
+    price: parseFloat(document.getElementById('d-pr').value) || 0,
+    condition: document.getElementById('d-co').value,
+    brand: document.getElementById('d-br').value,
+    model: document.getElementById('d-mo').value,
+    category: document.getElementById('d-ca').value,
+    status: newStatus,
+    listingUrl: document.getElementById('d-lu')?.value || item.listingUrl,
+    salePrice: parseFloat(document.getElementById('d-sp')?.value) || item.salePrice,
+    search_query: sq,
+    ebayUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(sq)}&LH_Sold=1&LH_Complete=1`,
+    ebayUrlActive: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(sq)}&LH_Sold=0`,
+    history: [...(item.history||[]), `Edited — ${now()}${changed ? ' (status → ' + newStatus + ')' : ''}`]
+  };
+  DB.saveMeta(inventory);
+  document.getElementById('detailTitle').textContent = inventory[idx].title;
+  buildDetail(inventory[idx]);
+  toast('Saved ✓');
+}
+
+async function rerunAI() {
+  const notes = document.getElementById('d-notes').value.trim();
+  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
+  const item = inventory[idx];
+  const btn = document.querySelector('.rerun-row .btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-dark"></span>';
+  try {
+    const r = await callAI({ dataUrl: item.dataUrl, type: 'image/jpeg' }, notes);
+    inventory[idx] = {
+      ...item,
+      title: r.title, description: r.description,
+      condition: r.condition, price: r.price_suggested,
+      price_low: r.price_low, price_high: r.price_high,
+      brand: r.brand, model: r.model,
+      category: r.category, keywords: r.keywords || [],
+      search_query: r.search_query || buildSearchQuery(r),
+      ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive || r.ebayUrl,
+      history: [...(item.history||[]), `Re-analyzed${notes ? ' with notes: "' + notes + '"' : ''} — ${now()}`]
+    };
+    DB.saveMeta(inventory);
+    document.getElementById('detailTitle').textContent = inventory[idx].title;
+    buildDetail(inventory[idx]);
+    toast('Re-analysis done ✓');
+  } catch(e) {
+    toast('Error: ' + e.message);
+    btn.disabled = false; btn.textContent = 'Re-run';
+  }
+}
+
+function addNote() {
+  const input = document.getElementById('d-ni');
+  const txt = input.value.trim(); if (!txt) return;
+  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
+  inventory[idx].notes = inventory[idx].notes || [];
+  inventory[idx].notes.push({ text: txt, time: now() });
+  DB.saveMeta(inventory); buildDetail(inventory[idx]); toast('Note added');
+}
+
+function deleteItem() {
+  if (!confirm('Delete this item? Cannot be undone.')) return;
+  DB.deleteImage(currentId);
+  inventory = inventory.filter(i => i.id !== currentId);
+  DB.saveMeta(inventory); updateCounts(); closeDetail(); toast('Deleted');
+}
+
+// ── UTILS ───────────────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function now() { return new Date().toLocaleString(); }
+function esc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let tt;
+function toast(msg) {
+  const el = document.getElementById('toast'); el.textContent = msg; el.style.display = 'block';
+  clearTimeout(tt); tt = setTimeout(() => el.style.display = 'none', 3000);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('detailPage').classList.contains('open')) closeDetail();
+  }
+});
+
+initInventory();
+</script>
+</body>
+</html>
