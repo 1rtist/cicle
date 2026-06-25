@@ -11,7 +11,7 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { imageData, mediaType, extraNotes } = body;
+  const { imageData, mediaType, extraNotes, customPrompt } = body;
   if (!imageData) return { statusCode: 400, body: JSON.stringify({ error: 'imageData required' }) };
 
   const ctx = extraNotes ? `\n\nSeller context: ${extraNotes}` : '';
@@ -31,7 +31,7 @@ exports.handler = async (event) => {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageData } },
-            { type: 'text', text: `You are an expert reseller who specializes in identifying items for eBay listings. Analyze this item photo carefully and return ONLY a valid JSON object — no markdown, no backticks, no explanation.${ctx}
+            { type: 'text', text: (customPrompt || `You are an expert reseller who specializes in identifying items for eBay listings. Analyze this item photo carefully and return ONLY a valid JSON object — no markdown, no backticks, no explanation.
 
 CRITICAL INSTRUCTIONS:
 - Read ALL visible text on the item: logos, tags, labels, embroidery, prints, patches. This is almost always the brand or model.
@@ -61,7 +61,7 @@ RETAIL PRICE — use your knowledge of the brand and item to estimate what this 
   "model": "specific model, colorway, collection, or style name if visible, else Unknown",
   "search_query": "3-5 words: brand + item type + key style identifier. Must be specific enough for good eBay comps.",
   "keywords": ["4 to 6 specific search keywords including brand"]
-}` }
+}`) + ctx }
           ]
         }]
       })

@@ -31,21 +31,46 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
   }
 }
+/* Manual theme overrides — applied after media query so they win */
+html[data-theme="light"] {
+  --bg: #f9f9f7; --surface: #ffffff; --surface2: #f2f2ef; --surface3: #eaeae6;
+  --text: #1a1a18; --text2: #5a5a55; --text3: #9a9a93;
+  --border: rgba(0,0,0,0.08); --border2: rgba(0,0,0,0.14); --border3: rgba(0,0,0,0.24);
+  --accent: #1a1a18; --accent-fg: #f9f9f7;
+  --blue: #2563EB; --blue-bg: #EFF6FF; --blue-border: #BFDBFE;
+  --green: #16A34A; --green-bg: #F0FDF4; --green-border: #BBF7D0;
+  --amber: #D97706; --amber-bg: #FFFBEB; --amber-border: #FDE68A;
+  --red: #DC2626; --red-bg: #FEF2F2; --red-border: #FECACA;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
+}
+html[data-theme="dark"] {
+  --bg: #111110; --surface: #1c1c1a; --surface2: #252523; --surface3: #2e2e2b;
+  --text: #f0f0ec; --text2: #9a9a93; --text3: #5a5a55;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13); --border3: rgba(255,255,255,0.22);
+  --accent: #f0f0ec; --accent-fg: #111110;
+  --blue: #60A5FA; --blue-bg: rgba(37,99,235,0.12); --blue-border: rgba(37,99,235,0.35);
+  --green: #4ADE80; --green-bg: rgba(22,163,74,0.12); --green-border: rgba(22,163,74,0.35);
+  --amber: #FCD34D; --amber-bg: rgba(217,119,6,0.12); --amber-border: rgba(217,119,6,0.35);
+  --red: #F87171; --red-bg: rgba(220,38,38,0.12); --red-border: rgba(220,38,38,0.35);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+}
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
 .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-.topbar { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
 .logo { font-size: 16px; font-weight: 600; letter-spacing: -0.4px; }
 .logo-sub { font-size: 13px; color: var(--text3); }
-.tabs { display: flex; gap: 2px; }
-.tab { padding: 6px 13px; font-size: 13px; font-weight: 500; border: none; background: none; color: var(--text2); cursor: pointer; border-radius: var(--r); font-family: inherit; transition: all 0.12s; }
-.tab:hover { background: var(--surface2); color: var(--text); }
-.tab.active { background: var(--surface2); color: var(--text); }
-.tab .cnt { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; border-radius: 99px; background: var(--surface3); color: var(--text2); font-size: 10px; padding: 0 4px; margin-left: 4px; }
-.tab.active .cnt { background: var(--accent); color: var(--accent-fg); }
-.topbar-right { margin-left: auto; }
 .panels { flex: 1; overflow: hidden; position: relative; }
 .panel { position: absolute; inset: 0; overflow-y: auto; padding: 20px; display: none; }
 .panel.active { display: block; }
+
+/* bottom nav */
+.bottom-nav { display: flex; align-items: center; background: var(--surface); border-top: 1px solid var(--border); height: 64px; flex-shrink: 0; position: relative; padding-bottom: env(safe-area-inset-bottom); }
+.nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 500; color: var(--text3); cursor: pointer; border: none; background: none; font-family: inherit; padding: 8px 0; transition: color 0.12s; }
+.nav-tab.active { color: var(--text); }
+.nav-tab svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.nav-fab { width: 54px; height: 54px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 20px; position: relative; top: -14px; cursor: pointer; border: none; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.22); transition: opacity 0.12s; }
+.nav-fab:hover { opacity: 0.85; }
+.nav-fab svg { width: 24px; height: 24px; stroke: var(--accent-fg); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
 /* buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
@@ -132,13 +157,28 @@ select { appearance: none; cursor: pointer; }
 .rerun-row { display: flex; gap: 8px; align-items: flex-end; }
 .rerun-row textarea { min-height: 48px; font-size: 13px; flex: 1; }
 
+/* settings */
+.settings-section { margin-bottom: 28px; }
+.settings-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); margin-bottom: 12px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+.setting-row:last-child { border-bottom: none; }
+.setting-info { flex: 1; }
+.setting-label { font-size: 14px; font-weight: 500; }
+.setting-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.theme-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.theme-btn { padding: 6px 13px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--text2); font-family: inherit; transition: all 0.12s; }
+.theme-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.prompt-wrap { margin-top: 10px; }
+.prompt-wrap textarea { min-height: 280px; font-size: 12px; font-family: ui-monospace, 'SF Mono', monospace; line-height: 1.6; }
+.prompt-actions { display: flex; gap: 8px; margin-top: 8px; }
+
 /* misc */
 .empty-state { text-align: center; padding: 52px 20px; color: var(--text2); }
 .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
 .spinner-dark { border: 2px solid var(--border2); border-top-color: var(--text2); }
 @keyframes spin { to { transform: rotate(360deg); } }
-#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 99px; font-size: 13px; z-index: 9999; display: none; white-space: nowrap; box-shadow: var(--shadow-lg); pointer-events: none; }
+#toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 99px; font-size: 13px; z-index: 9999; display: none; white-space: nowrap; box-shadow: var(--shadow-lg); pointer-events: none; }
 </style>
 </head>
 <body>
@@ -146,10 +186,6 @@ select { appearance: none; cursor: pointer; }
   <div class="topbar">
     <span class="logo">cicle</span>
     <span class="logo-sub">listing scanner</span>
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('scan')" id="t-scan">scan</button>
-      <button class="tab" onclick="switchTab('inv')" id="t-inv">inventory <span class="cnt" id="c-inv">0</span></button>
-    </div>
   </div>
 
   <div class="panels">
@@ -190,7 +226,52 @@ select { appearance: none; cursor: pointer; }
       </div>
       <div class="inv-grid" id="invGrid"></div>
     </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="p-settings">
+      <div class="settings-section">
+        <div class="settings-section-title">Appearance</div>
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label">Theme</div>
+            <div class="setting-sub">Override your system appearance setting</div>
+          </div>
+          <div class="theme-btns">
+            <button class="theme-btn" id="tb-auto" onclick="setTheme('auto')">Auto</button>
+            <button class="theme-btn" id="tb-light" onclick="setTheme('light')">Light</button>
+            <button class="theme-btn" id="tb-dark" onclick="setTheme('dark')">Dark</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">AI Prompt</div>
+        <div class="setting-sub" style="margin-bottom:10px;font-size:13px;color:var(--text2)">This is the instruction sent to Claude with every photo. Edit it to tune how the AI identifies items and writes listings. Changes are saved to your browser.</div>
+        <div class="prompt-wrap">
+          <textarea id="promptEditor" spellcheck="false"></textarea>
+          <div class="prompt-actions">
+            <button class="btn btn-dark btn-sm" onclick="savePrompt()">Save prompt</button>
+            <button class="btn btn-outline btn-sm" onclick="resetPrompt()">Reset to default</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" id="t-inv" onclick="switchTab('inv')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      inventory
+    </button>
+    <button class="nav-fab" id="t-scan" onclick="switchTab('scan')" aria-label="Scan item">
+      <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    </button>
+    <button class="nav-tab" id="t-settings" onclick="switchTab('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      settings
+    </button>
+  </nav>
 </div>
 
 <!-- DETAIL PAGE -->
@@ -206,6 +287,69 @@ select { appearance: none; cursor: pointer; }
 <div id="toast"></div>
 
 <script>
+// ── DEFAULT PROMPT ──────────────────────────────────────────
+const DEFAULT_PROMPT = `You are an expert reseller who specializes in identifying items for eBay listings. Analyze this item photo carefully and return ONLY a valid JSON object — no markdown, no backticks, no explanation.
+
+CRITICAL INSTRUCTIONS:
+- Read ALL visible text on the item: logos, tags, labels, embroidery, prints, patches. This is almost always the brand or model.
+- For clothing/streetwear: check the chest, back, sleeves, collar tag, and graphic prints. Streetwear brands (Supreme, BAPE, Off-White, Barriers, Corteiz, Gallery Dept, etc.) always show their name visually.
+- For electronics: check the device body, screen, and visible labels for brand and model number.
+- For sneakers: identify brand AND full colorway name (e.g. "Nike Air Jordan 1 Retro High OG Chicago").
+- Never guess generically. If you can read text in the image, use it. "Unknown" is a last resort only when truly nothing is visible.
+
+TITLE FORMAT — follow this order exactly: Brand > Item Type > Color > Additional Details > Size
+  Example: "Burberry Brit Long Sleeve Button Down Shirt Blue Striped Embroidery Men's XL"
+  NEVER start a title with "Vintage" — place it elsewhere in the title if relevant.
+
+SEARCH QUERY — used to find eBay sold listings. Must be specific enough to return relevant comps but short (3-5 words max). Include brand + item type + one key style identifier (collection name, colorway, or distinguishing feature). "Burberry Brit Button Down" not "Burberry blue shirt". "Jordan 1 Chicago" not "Nike red shoe". Specificity beats brevity when the item has a known name.
+
+RETAIL PRICE — use your knowledge of the brand and item to estimate what this item sold for new at retail. If it is a current product, use the current retail price. If discontinued, use the original retail price.
+
+{
+  "title": "eBay listing title following Brand > Type > Color > Details > Size format, 60-80 chars",
+  "description": "2-3 sentences. Lead with brand and item name. Be specific about colorway, size if visible, and honest about condition.",
+  "condition": "one of exactly: New, Like New, Very Good, Good, Acceptable, For Parts",
+  "retail_price": <number, original or current retail price USD>,
+  "price_low": <number, conservative sold price USD>,
+  "price_high": <number, optimistic sold price USD>,
+  "price_suggested": <number, recommended list price USD>,
+  "category": "eBay category, e.g. Streetwear, Sneakers, Consumer Electronics",
+  "brand": "exact brand name read from the item",
+  "model": "specific model, colorway, collection, or style name if visible, else Unknown",
+  "search_query": "3-5 words: brand + item type + key style identifier. Must be specific enough for good eBay comps.",
+  "keywords": ["4 to 6 specific search keywords including brand"]
+}`;
+
+function getPrompt() {
+  return localStorage.getItem('cicle_prompt') || DEFAULT_PROMPT;
+}
+function savePrompt() {
+  const val = document.getElementById('promptEditor').value.trim();
+  if (!val) return;
+  localStorage.setItem('cicle_prompt', val);
+  toast('Prompt saved ✓');
+}
+function resetPrompt() {
+  if (!confirm('Reset prompt to default?')) return;
+  localStorage.removeItem('cicle_prompt');
+  document.getElementById('promptEditor').value = DEFAULT_PROMPT;
+  toast('Prompt reset to default');
+}
+
+// ── THEME ───────────────────────────────────────────────────
+function setTheme(t) {
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('cicle_theme', t);
+  ['auto','light','dark'].forEach(n => {
+    document.getElementById('tb-'+n).classList.toggle('active', n === t);
+  });
+}
+function loadTheme() {
+  const t = localStorage.getItem('cicle_theme') || 'auto';
+  setTheme(t);
+}
+
 // ── STORAGE — IndexedDB ─────────────────────────────────────
 const IDB_NAME = 'cicle';
 const IDB_STORE = 'images';
@@ -269,22 +413,26 @@ let inventory = [];
 let currentId = null;
 
 async function initInventory() {
+  loadTheme();
   const meta = DB.loadMeta();
   inventory = await DB.loadImages(meta);
   updateCounts();
-  if (document.getElementById('p-inv').classList.contains('active')) renderInv();
+  switchTab('inv');
 }
 
 // ── TABS ────────────────────────────────────────────────────
 function switchTab(t) {
-  ['scan','inv'].forEach(n => {
-    document.getElementById('p-'+n).classList.toggle('active', n===t);
-    document.getElementById('t-'+n).classList.toggle('active', n===t);
+  ['scan','inv','settings'].forEach(n => {
+    const panel = document.getElementById('p-'+n);
+    const tab = document.getElementById('t-'+n);
+    if (panel) panel.classList.toggle('active', n===t);
+    if (tab) tab.classList.toggle('active', n===t);
   });
-  if (t==='inv') renderInv();
+  if (t === 'inv') renderInv();
+  if (t === 'settings') document.getElementById('promptEditor').value = getPrompt();
 }
 function updateCounts() {
-  document.getElementById('c-inv').textContent = inventory.length;
+  document.getElementById('c-inv') && (document.getElementById('c-inv').textContent = inventory.length);
 }
 
 // ── FILE HANDLING ───────────────────────────────────────────
@@ -387,7 +535,7 @@ async function callAI(img, extraNotes = '') {
   const res = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageData: b64, mediaType: 'image/jpeg', extraNotes })
+    body: JSON.stringify({ imageData: b64, mediaType: 'image/jpeg', extraNotes, customPrompt: getPrompt() })
   });
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
@@ -461,7 +609,7 @@ function renderInv() {
   const grid = document.getElementById('invGrid');
 
   if (!items.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ei">📦</div><p>${q ? 'No matches.' : 'No inventory yet. Scan some items first.'}</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ei">📦</div><p>${q ? 'No matches.' : 'No inventory yet. Hit the camera button to scan your first item.'}</p></div>`;
     return;
   }
 
