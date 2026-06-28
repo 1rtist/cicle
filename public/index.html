@@ -15,6 +15,7 @@
   --green: #16A34A; --green-bg: #F0FDF4; --green-border: #BBF7D0;
   --amber: #D97706; --amber-bg: #FFFBEB; --amber-border: #FDE68A;
   --red: #DC2626; --red-bg: #FEF2F2; --red-border: #FECACA;
+  --nav-h: 64px;
   --r: 8px; --r-lg: 12px;
   --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
 }
@@ -31,7 +32,6 @@
     --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
   }
 }
-/* Manual theme overrides — applied after media query so they win */
 html[data-theme="light"] {
   --bg: #f9f9f7; --surface: #ffffff; --surface2: #f2f2ef; --surface3: #eaeae6;
   --text: #1a1a18; --text2: #5a5a55; --text3: #9a9a93;
@@ -54,21 +54,30 @@ html[data-theme="dark"] {
   --red: #F87171; --red-bg: rgba(220,38,38,0.12); --red-border: rgba(220,38,38,0.35);
   --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
-.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-.topbar { display: flex; align-items: center; gap: 10px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+/* layout */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; position: relative; z-index: 10; }
 .logo { font-size: 16px; font-weight: 600; letter-spacing: -0.4px; }
 .logo-sub { font-size: 13px; color: var(--text3); }
+.topbar-right { margin-left: auto; display: flex; gap: 6px; }
+.icon-btn { width: 34px; height: 34px; border-radius: var(--r); border: none; background: none; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+.icon-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* panels — leave room for fixed bottom nav */
 .panels { flex: 1; overflow: hidden; position: relative; }
-.panel { position: absolute; inset: 0; overflow-y: auto; padding: 20px; display: none; }
+.panel { position: absolute; inset: 0; overflow-y: auto; padding: 16px 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px); display: none; }
 .panel.active { display: block; }
 
-/* bottom nav */
-.bottom-nav { display: flex; align-items: center; background: var(--surface); border-top: 1px solid var(--border); height: 64px; flex-shrink: 0; position: relative; padding-bottom: env(safe-area-inset-bottom); }
-.nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 500; color: var(--text3); cursor: pointer; border: none; background: none; font-family: inherit; padding: 8px 0; transition: color 0.12s; }
+/* fixed bottom nav */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: center; background: var(--surface); border-top: 1px solid var(--border); height: var(--nav-h); padding-bottom: env(safe-area-inset-bottom); }
+.nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; font-weight: 500; color: var(--text3); cursor: pointer; border: none; background: none; font-family: inherit; padding: 8px 0; transition: color 0.12s; -webkit-tap-highlight-color: transparent; }
 .nav-tab.active { color: var(--text); }
 .nav-tab svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.nav-fab { width: 54px; height: 54px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 20px; position: relative; top: -14px; cursor: pointer; border: none; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.22); transition: opacity 0.12s; }
+.nav-fab { width: 54px; height: 54px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 20px; position: relative; top: -14px; cursor: pointer; border: none; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,0.22); transition: opacity 0.12s; -webkit-tap-highlight-color: transparent; }
 .nav-fab:hover { opacity: 0.85; }
 .nav-fab svg { width: 24px; height: 24px; stroke: var(--accent-fg); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -93,7 +102,8 @@ textarea { resize: vertical; min-height: 72px; }
 select { appearance: none; cursor: pointer; }
 .field { margin-bottom: 14px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media(max-width:500px) { .two-col { grid-template-columns: 1fr; } }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media(max-width:500px) { .two-col, .three-col { grid-template-columns: 1fr; } }
 
 /* scan panel */
 .drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--r-lg); padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.12s; }
@@ -115,12 +125,13 @@ select { appearance: none; cursor: pointer; }
 
 /* inventory */
 .inv-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.inv-toolbar input { max-width: 200px; }
+.inv-toolbar input { max-width: 160px; }
 .inv-toolbar select { width: auto; padding: 7px 28px 7px 10px; font-size: 13px; }
 .inv-ct { font-size: 13px; color: var(--text2); margin-left: auto; }
-.inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px,1fr)); gap: 12px; }
-.inv-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow); }
+.inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; }
+.inv-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow); position: relative; }
 .inv-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); transform: translateY(-1px); }
+.inv-card.selected { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-border); }
 .inv-card img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--surface2); display: block; }
 .inv-body { padding: 10px; }
 .inv-cond { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
@@ -131,20 +142,39 @@ select { appearance: none; cursor: pointer; }
 .p-unlisted { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
 .p-listed { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
 .p-sold { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.select-check { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border2); display: none; align-items: center; justify-content: center; }
+.select-mode .select-check { display: flex; }
+.inv-card.selected .select-check { background: var(--blue); border-color: var(--blue); color: white; }
+.bulk-bar { position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border2); padding: 12px 16px; display: none; align-items: center; gap: 10px; z-index: 40; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); }
+.bulk-bar.open { display: flex; }
+.bulk-bar-ct { font-size: 13px; font-weight: 500; flex: 1; }
+
+/* trips */
+.trip-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow); }
+.trip-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); }
+.trip-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.trip-num { font-size: 13px; font-weight: 600; }
+.trip-source { font-size: 12px; color: var(--blue); background: var(--blue-bg); border: 1px solid var(--blue-border); padding: 2px 8px; border-radius: 99px; }
+.trip-date { font-size: 12px; color: var(--text3); }
+.trip-stats { display: flex; gap: 16px; margin-top: 8px; }
+.trip-stat { font-size: 12px; color: var(--text2); }
+.trip-stat span { font-weight: 600; color: var(--text); }
+.trip-detail-page { position: fixed; inset: 0; background: var(--bg); z-index: 100; overflow-y: auto; display: none; }
+.trip-detail-page.open { display: block; }
 
 /* detail page */
 .detail-page { position: fixed; inset: 0; background: var(--bg); z-index: 100; overflow-y: auto; display: none; }
 .detail-page.open { display: block; }
-.detail-bar { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+.detail-bar { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 54px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
 .detail-bar h2 { font-size: 15px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.detail-wrap { max-width: 860px; margin: 0 auto; padding: 24px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.detail-wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 @media(max-width:620px) { .detail-wrap { grid-template-columns: 1fr; } }
 .detail-img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: var(--r-lg); background: var(--surface2); border: 1px solid var(--border); display: block; }
 .sec-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3); margin: 20px 0 10px; }
 .sec-lbl:first-child { margin-top: 0; }
 .price-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
 .det-actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
-.det-actions .btn { flex: 1; min-width: 110px; }
+.det-actions .btn { flex: 1; min-width: 100px; }
 .ebay-btn { background: var(--blue-bg); border: 1px solid var(--blue-border); color: var(--blue); }
 .note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; margin-bottom: 8px; }
 .note-card p { font-size: 13px; }
@@ -168,9 +198,17 @@ select { appearance: none; cursor: pointer; }
 .theme-btns { display: flex; gap: 6px; flex-shrink: 0; }
 .theme-btn { padding: 6px 13px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--text2); font-family: inherit; transition: all 0.12s; }
 .theme-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-.prompt-wrap { margin-top: 10px; }
 .prompt-wrap textarea { min-height: 280px; font-size: 12px; font-family: ui-monospace, 'SF Mono', monospace; line-height: 1.6; }
 .prompt-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* modal */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 24px 20px; width: 100%; max-width: 480px; border: 1px solid var(--border2); }
+.modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.modal p { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+.modal-foot { display: flex; gap: 8px; margin-top: 16px; }
+.modal-foot .btn { flex: 1; }
 
 /* misc */
 .empty-state { text-align: center; padding: 52px 20px; color: var(--text2); }
@@ -178,7 +216,7 @@ select { appearance: none; cursor: pointer; }
 .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
 .spinner-dark { border: 2px solid var(--border2); border-top-color: var(--text2); }
 @keyframes spin { to { transform: rotate(360deg); } }
-#toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 99px; font-size: 13px; z-index: 9999; display: none; white-space: nowrap; box-shadow: var(--shadow-lg); pointer-events: none; }
+#toast { position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px); left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 20px; border-radius: 99px; font-size: 13px; z-index: 9999; display: none; white-space: nowrap; box-shadow: var(--shadow-lg); pointer-events: none; }
 </style>
 </head>
 <body>
@@ -186,11 +224,16 @@ select { appearance: none; cursor: pointer; }
   <div class="topbar">
     <span class="logo">cicle</span>
     <span class="logo-sub">listing scanner</span>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="switchTab('settings')" id="t-settings" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="panels">
     <!-- SCAN -->
-    <div class="panel active" id="p-scan">
+    <div class="panel" id="p-scan">
       <div class="drop-zone" id="dropZone"
         onclick="document.getElementById('fi').click()"
         ondragover="event.preventDefault();this.classList.add('over')"
@@ -203,13 +246,13 @@ select { appearance: none; cursor: pointer; }
       <input type="file" id="fi" accept="image/*,.heic,.heif,image/heic,image/heif" multiple style="display:none" onchange="handleFiles(this.files)">
       <div class="preview-grid" id="previewGrid"></div>
       <div id="progressList" style="display:none"></div>
-      <button class="btn btn-dark" id="analyzeBtn" disabled onclick="runAnalysis()" style="width:100%;margin-top:4px">Analyze with AI → add to inventory</button>
+      <button class="btn btn-dark" id="analyzeBtn" disabled onclick="startAnalysis()" style="width:100%;margin-top:4px">Analyze with AI → add to inventory</button>
     </div>
 
     <!-- INVENTORY -->
-    <div class="panel" id="p-inv">
+    <div class="panel active" id="p-inv">
       <div class="inv-toolbar">
-        <input type="text" placeholder="search..." id="invSearch" oninput="renderInv()" style="max-width:200px">
+        <input type="text" placeholder="search..." id="invSearch" oninput="renderInv()">
         <select id="invSort" onchange="renderInv()">
           <option value="newest">newest</option>
           <option value="oldest">oldest</option>
@@ -222,9 +265,15 @@ select { appearance: none; cursor: pointer; }
           <option value="listed">listed</option>
           <option value="sold">sold</option>
         </select>
+        <button class="btn btn-outline btn-sm" id="selectBtn" onclick="toggleSelectMode()">Select</button>
         <span class="inv-ct" id="invCt"></span>
       </div>
       <div class="inv-grid" id="invGrid"></div>
+    </div>
+
+    <!-- TRIPS -->
+    <div class="panel" id="p-trips">
+      <div id="tripsGrid"></div>
     </div>
 
     <!-- SETTINGS -->
@@ -234,7 +283,7 @@ select { appearance: none; cursor: pointer; }
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-label">Theme</div>
-            <div class="setting-sub">Override your system appearance setting</div>
+            <div class="setting-sub">Override your system appearance</div>
           </div>
           <div class="theme-btns">
             <button class="theme-btn" id="tb-auto" onclick="setTheme('auto')">Auto</button>
@@ -243,10 +292,9 @@ select { appearance: none; cursor: pointer; }
           </div>
         </div>
       </div>
-
       <div class="settings-section">
         <div class="settings-section-title">AI Prompt</div>
-        <div class="setting-sub" style="margin-bottom:10px;font-size:13px;color:var(--text2)">This is the instruction sent to Claude with every photo. Edit it to tune how the AI identifies items and writes listings. Changes are saved to your browser.</div>
+        <div class="setting-sub" style="margin-bottom:10px;font-size:13px;color:var(--text2)">Instruction sent to Claude with every scan. Edit to tune identification and listing style.</div>
         <div class="prompt-wrap">
           <textarea id="promptEditor" spellcheck="false"></textarea>
           <div class="prompt-actions">
@@ -264,14 +312,45 @@ select { appearance: none; cursor: pointer; }
       <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
       inventory
     </button>
-    <button class="nav-fab" id="t-scan" onclick="switchTab('scan')" aria-label="Scan item">
+    <button class="nav-fab" onclick="switchTab('scan')" aria-label="Scan item">
       <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     </button>
-    <button class="nav-tab" id="t-settings" onclick="switchTab('settings')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      settings
+    <button class="nav-tab" id="t-trips" onclick="switchTab('trips')">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      trips
     </button>
   </nav>
+</div>
+
+<!-- BULK ACTION BAR -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-bar-ct" id="bulkCt">0 selected</span>
+  <button class="btn btn-outline btn-sm" onclick="bulkAssignTrip()">Add to trip</button>
+  <button class="btn btn-danger btn-sm" onclick="bulkDelete()">Delete</button>
+  <button class="btn btn-ghost btn-sm" onclick="toggleSelectMode()">Cancel</button>
+</div>
+
+<!-- TRIP MODAL (pre-scan) -->
+<div class="modal-bg" id="tripModal">
+  <div class="modal">
+    <h3>Group as a trip?</h3>
+    <p>You're scanning multiple items. Combine them into one trip to track where you got them.</p>
+    <div class="field">
+      <label class="lbl">Source</label>
+      <select id="tripSourceModal">
+        <option value="">— skip, don't assign a trip —</option>
+        <option value="Flea Market">Flea Market</option>
+        <option value="Storage Unit">Storage Unit</option>
+        <option value="Estate Sale">Estate Sale</option>
+        <option value="Local Marketplace">Local Marketplace</option>
+        <option value="Personal Connect">Personal Connect</option>
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeTripModal(false)">Skip</button>
+      <button class="btn btn-dark" onclick="closeTripModal(true)">Confirm &amp; scan</button>
+    </div>
+  </div>
 </div>
 
 <!-- DETAIL PAGE -->
@@ -284,45 +363,59 @@ select { appearance: none; cursor: pointer; }
   <div class="detail-wrap" id="detailWrap"></div>
 </div>
 
+<!-- TRIP DETAIL PAGE -->
+<div class="trip-detail-page" id="tripDetailPage">
+  <div class="detail-bar">
+    <button class="btn btn-ghost btn-sm" onclick="closeTripDetail()">← back</button>
+    <h2 id="tripDetailTitle"></h2>
+  </div>
+  <div style="padding:16px" id="tripDetailWrap"></div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 // ── DEFAULT PROMPT ──────────────────────────────────────────
-const DEFAULT_PROMPT = `You are an expert reseller who specializes in identifying items for eBay listings. Analyze this item photo carefully and return ONLY a valid JSON object — no markdown, no backticks, no explanation.
+const DEFAULT_PROMPT = `You are an expert reseller and product identification specialist with deep knowledge of brands, models, collections, and retail history across streetwear, sneakers, electronics, and collectibles.
 
-CRITICAL INSTRUCTIONS:
-- Read ALL visible text on the item: logos, tags, labels, embroidery, prints, patches. This is almost always the brand or model.
-- For clothing/streetwear: check the chest, back, sleeves, collar tag, and graphic prints. Streetwear brands (Supreme, BAPE, Off-White, Barriers, Corteiz, Gallery Dept, etc.) always show their name visually.
-- For electronics: check the device body, screen, and visible labels for brand and model number.
-- For sneakers: identify brand AND full colorway name (e.g. "Nike Air Jordan 1 Retro High OG Chicago").
-- Never guess generically. If you can read text in the image, use it. "Unknown" is a last resort only when truly nothing is visible.
+Your job is NOT to describe what you see visually. Your job is to IDENTIFY the specific product using your training knowledge — then return a JSON object for an eBay listing.
 
-TITLE FORMAT — follow this order exactly: Brand > Item Type > Color > Additional Details > Size
+Return ONLY a valid JSON object — no markdown, no backticks, no explanation.
+
+IDENTIFICATION RULES:
+- Treat yourself as a product database. Recognize the specific item by brand, collection, season, model name, and year if possible.
+- Read ALL visible text: logos, tags, labels, embroidery, prints, patches, model numbers, serial numbers.
+- For streetwear: identify the exact collection, season (e.g. FW19, SS21), and colorway. Do not say "black hoodie with logo" — say "Supreme FW19 Box Logo Hooded Sweatshirt Black".
+- For sneakers: identify the exact model, colorway name, and release year (e.g. "Nike Air Jordan 1 Retro High OG Bred Toe 2018").
+- For electronics: identify the exact model number, generation, and variant (e.g. "Apple AirPods Pro 2nd Generation MagSafe Case").
+- For designer goods: identify the specific line and style name (e.g. "Louis Vuitton Monogram Speedy 30").
+- NEVER describe generically. "Black hoodie", "white sneaker", "blue shirt" are failures. Use your knowledge to name it specifically.
+- If truly unidentifiable, use what text IS visible and be honest in the description.
+
+TITLE FORMAT — follow this order: Brand > Item Type > Color > Additional Details > Size
   Example: "Burberry Brit Long Sleeve Button Down Shirt Blue Striped Embroidery Men's XL"
-  NEVER start a title with "Vintage" — place it elsewhere in the title if relevant.
+  NEVER start a title with "Vintage" — place it after the item type if relevant.
 
-SEARCH QUERY — used to find eBay sold listings. Must be specific enough to return relevant comps but short (3-5 words max). Include brand + item type + one key style identifier (collection name, colorway, or distinguishing feature). "Burberry Brit Button Down" not "Burberry blue shirt". "Jordan 1 Chicago" not "Nike red shoe". Specificity beats brevity when the item has a known name.
+SEARCH QUERY — 3-5 words for eBay sold listings. Brand + item type + key identifier. Specific beats short: "Burberry Brit Button Down" beats "Burberry blue shirt". "Jordan 1 Bred Toe" beats "Nike red shoe".
 
-RETAIL PRICE — use your knowledge of the brand and item to estimate what this item sold for new at retail. If it is a current product, use the current retail price. If discontinued, use the original retail price.
+RETAIL PRICE — estimate original or current retail price in USD from your knowledge.
 
 {
-  "title": "eBay listing title following Brand > Type > Color > Details > Size format, 60-80 chars",
-  "description": "2-3 sentences. Lead with brand and item name. Be specific about colorway, size if visible, and honest about condition.",
+  "title": "eBay listing title, Brand > Type > Color > Details > Size, 60-80 chars",
+  "description": "2-3 sentences. Name the specific product. Include colorway, size if visible, honest condition notes.",
   "condition": "one of exactly: New, Like New, Very Good, Good, Acceptable, For Parts",
-  "retail_price": <number, original or current retail price USD>,
+  "retail_price": <number, original or current retail USD>,
   "price_low": <number, conservative sold price USD>,
   "price_high": <number, optimistic sold price USD>,
   "price_suggested": <number, recommended list price USD>,
-  "category": "eBay category, e.g. Streetwear, Sneakers, Consumer Electronics",
-  "brand": "exact brand name read from the item",
-  "model": "specific model, colorway, collection, or style name if visible, else Unknown",
-  "search_query": "3-5 words: brand + item type + key style identifier. Must be specific enough for good eBay comps.",
-  "keywords": ["4 to 6 specific search keywords including brand"]
+  "category": "eBay category e.g. Streetwear, Sneakers, Consumer Electronics",
+  "brand": "exact brand name",
+  "model": "specific model, colorway, collection, season, style name",
+  "search_query": "3-5 words: brand + type + key identifier",
+  "keywords": ["4-6 specific search keywords including brand and model"]
 }`;
 
-function getPrompt() {
-  return localStorage.getItem('cicle_prompt') || DEFAULT_PROMPT;
-}
+function getPrompt() { return localStorage.getItem('cicle_prompt') || DEFAULT_PROMPT; }
 function savePrompt() {
   const val = document.getElementById('promptEditor').value.trim();
   if (!val) return;
@@ -333,7 +426,7 @@ function resetPrompt() {
   if (!confirm('Reset prompt to default?')) return;
   localStorage.removeItem('cicle_prompt');
   document.getElementById('promptEditor').value = DEFAULT_PROMPT;
-  toast('Prompt reset to default');
+  toast('Prompt reset');
 }
 
 // ── THEME ───────────────────────────────────────────────────
@@ -341,20 +434,13 @@ function setTheme(t) {
   if (t === 'auto') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('cicle_theme', t);
-  ['auto','light','dark'].forEach(n => {
-    document.getElementById('tb-'+n).classList.toggle('active', n === t);
-  });
+  ['auto','light','dark'].forEach(n => document.getElementById('tb-'+n)?.classList.toggle('active', n===t));
 }
-function loadTheme() {
-  const t = localStorage.getItem('cicle_theme') || 'auto';
-  setTheme(t);
-}
+function loadTheme() { setTheme(localStorage.getItem('cicle_theme') || 'auto'); }
 
-// ── STORAGE — IndexedDB ─────────────────────────────────────
-const IDB_NAME = 'cicle';
-const IDB_STORE = 'images';
+// ── STORAGE ─────────────────────────────────────────────────
+const IDB_NAME = 'cicle', IDB_STORE = 'images';
 let _idb = null;
-
 function openIDB() {
   if (_idb) return Promise.resolve(_idb);
   return new Promise((res, rej) => {
@@ -364,75 +450,43 @@ function openIDB() {
     req.onerror = () => rej(req.error);
   });
 }
-function idbPut(key, value) {
-  return openIDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(value, key);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  }));
-}
-function idbGet(key) {
-  return openIDB().then(db => new Promise((res, rej) => {
-    const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).get(key);
-    req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error);
-  }));
-}
-function idbDelete(key) {
-  return openIDB().then(db => new Promise((res, rej) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).delete(key);
-    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
-  }));
-}
+function idbPut(k, v) { return openIDB().then(db => new Promise((res,rej) => { const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(v,k); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); })); }
+function idbGet(k) { return openIDB().then(db => new Promise((res,rej) => { const req=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(k); req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); })); }
+function idbDelete(k) { return openIDB().then(db => new Promise((res,rej) => { const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).delete(k); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); })); }
 
 const DB = {
-  loadMeta() {
-    try { return JSON.parse(localStorage.getItem('cicle_meta')||'[]'); } catch { return []; }
-  },
-  saveMeta(inv) {
-    const meta = inv.map(({ dataUrl, ...rest }) => rest);
-    try { localStorage.setItem('cicle_meta', JSON.stringify(meta)); } catch(e) { console.error('Meta save failed', e); }
-  },
-  async saveImage(id, dataUrl) {
-    try { await idbPut(id, dataUrl); } catch(e) { console.error('Image save failed', e); }
-  },
-  async deleteImage(id) {
-    try { await idbDelete(id); } catch(e) { console.error('Image delete failed', e); }
-  },
-  async loadImages(inv) {
-    await Promise.all(inv.map(async item => {
-      try { item.dataUrl = await idbGet(item.id) || null; } catch { item.dataUrl = null; }
-    }));
-    return inv;
-  }
+  loadMeta() { try { return JSON.parse(localStorage.getItem('cicle_meta')||'[]'); } catch { return []; } },
+  saveMeta(inv) { try { localStorage.setItem('cicle_meta', JSON.stringify(inv.map(({dataUrl,...r})=>r))); } catch(e){console.error(e);} },
+  loadTrips() { try { return JSON.parse(localStorage.getItem('cicle_trips')||'[]'); } catch { return []; } },
+  saveTrips(trips) { try { localStorage.setItem('cicle_trips', JSON.stringify(trips)); } catch(e){console.error(e);} },
+  async saveImage(id, dataUrl) { try { await idbPut(id, dataUrl); } catch(e){console.error(e);} },
+  async deleteImage(id) { try { await idbDelete(id); } catch(e){console.error(e);} },
+  async loadImages(inv) { await Promise.all(inv.map(async item => { try { item.dataUrl = await idbGet(item.id)||null; } catch { item.dataUrl=null; } })); return inv; }
 };
 
 // ── STATE ───────────────────────────────────────────────────
-let pending = [];
-let inventory = [];
-let currentId = null;
+let pending = [], inventory = [], trips = [], currentId = null, currentTripId = null;
+let selectMode = false, selectedIds = new Set();
+let pendingTripSource = null;
 
-async function initInventory() {
+async function initApp() {
   loadTheme();
   const meta = DB.loadMeta();
   inventory = await DB.loadImages(meta);
-  updateCounts();
-  switchTab('inv');
+  trips = DB.loadTrips();
+  renderInv();
 }
 
 // ── TABS ────────────────────────────────────────────────────
 function switchTab(t) {
-  ['scan','inv','settings'].forEach(n => {
-    const panel = document.getElementById('p-'+n);
-    const tab = document.getElementById('t-'+n);
-    if (panel) panel.classList.toggle('active', n===t);
-    if (tab) tab.classList.toggle('active', n===t);
+  ['scan','inv','trips','settings'].forEach(n => {
+    document.getElementById('p-'+n)?.classList.toggle('active', n===t);
+    document.getElementById('t-'+n)?.classList.toggle('active', n===t);
   });
-  if (t === 'inv') renderInv();
-  if (t === 'settings') document.getElementById('promptEditor').value = getPrompt();
-}
-function updateCounts() {
-  document.getElementById('c-inv') && (document.getElementById('c-inv').textContent = inventory.length);
+  if (t==='inv') renderInv();
+  if (t==='trips') renderTrips();
+  if (t==='settings') document.getElementById('promptEditor').value = getPrompt();
+  if (selectMode && t!=='inv') { selectMode=false; selectedIds.clear(); document.getElementById('bulkBar').classList.remove('open'); }
 }
 
 // ── FILE HANDLING ───────────────────────────────────────────
@@ -440,60 +494,71 @@ function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); 
 
 async function handleFiles(files) {
   for (const f of Array.from(files)) {
-    const isHeic = /\.(heic|heif)$/i.test(f.name) || f.type === 'image/heic' || f.type === 'image/heif';
+    const isHeic = /\.(heic|heif)$/i.test(f.name)||f.type==='image/heic'||f.type==='image/heif';
     const idx = pending.length;
     pending.push({ name: f.name, dataUrl: null, type: 'image/jpeg' });
     renderPreviews();
     try {
       const dataUrl = await imageViaCanvas(f);
-      const newName = isHeic ? f.name.replace(/\.(heic|heif)$/i, '.jpg') : f.name;
-      pending[idx] = { name: newName, dataUrl, type: 'image/jpeg' };
-    } catch (err) {
-      pending.splice(idx, 1);
-      toast(isHeic
-        ? 'HEIC needs Safari on iPhone — or share as JPG from Photos, then upload that'
-        : 'Could not read file: ' + f.name);
+      pending[idx] = { name: isHeic ? f.name.replace(/\.(heic|heif)$/i,'.jpg') : f.name, dataUrl, type: 'image/jpeg' };
+    } catch {
+      pending.splice(idx,1);
+      toast(isHeic ? 'HEIC: share as JPG from Photos app first' : 'Could not read: '+f.name);
     }
     renderPreviews();
   }
 }
 
-function imageViaCanvas(file, maxDim = 1600) {
+function imageViaCanvas(file, maxDim=1600) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       try {
-        let { width: w, height: h } = img;
-        if (w > maxDim || h > maxDim) {
-          const ratio = Math.min(maxDim / w, maxDim / h);
-          w = Math.round(w * ratio); h = Math.round(h * ratio);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', 0.88));
+        let {width:w, height:h} = img;
+        if (w>maxDim||h>maxDim) { const r=Math.min(maxDim/w,maxDim/h); w=Math.round(w*r); h=Math.round(h*r); }
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg',0.88));
       } catch(e) { URL.revokeObjectURL(url); reject(e); }
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode image')); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode failed')); };
     img.src = url;
   });
 }
 
 function renderPreviews() {
-  document.getElementById('previewGrid').innerHTML = pending.map((img, i) => `
+  document.getElementById('previewGrid').innerHTML = pending.map((img,i) => `
     <div class="thumb">
-      ${img.dataUrl ? `<img src="${img.dataUrl}" alt="">` : '<div style="width:100%;height:100%;background:var(--surface3)"></div>'}
-      ${img.dataUrl ? `<button class="rm" onclick="rmPending(${i})">✕</button>` : ''}
+      ${img.dataUrl?`<img src="${img.dataUrl}" alt="">`:'<div style="width:100%;height:100%;background:var(--surface3)"></div>'}
+      ${img.dataUrl?`<button class="rm" onclick="rmPending(${i})">✕</button>`:''}
     </div>`).join('');
-  document.getElementById('analyzeBtn').disabled = !pending.some(p => p.dataUrl);
+  document.getElementById('analyzeBtn').disabled = !pending.some(p=>p.dataUrl);
 }
-function rmPending(i) { pending.splice(i, 1); renderPreviews(); }
+function rmPending(i) { pending.splice(i,1); renderPreviews(); }
+
+// ── TRIP MODAL (pre-scan) ───────────────────────────────────
+function startAnalysis() {
+  const batch = pending.filter(p=>p.dataUrl);
+  if (!batch.length) return;
+  if (batch.length > 1) {
+    document.getElementById('tripSourceModal').value = '';
+    document.getElementById('tripModal').classList.add('open');
+  } else {
+    pendingTripSource = null;
+    runAnalysis();
+  }
+}
+function closeTripModal(confirm) {
+  const src = document.getElementById('tripSourceModal').value;
+  pendingTripSource = (confirm && src) ? src : null;
+  document.getElementById('tripModal').classList.remove('open');
+  runAnalysis();
+}
 
 // ── AI ANALYSIS ─────────────────────────────────────────────
 async function runAnalysis() {
-  const batch = pending.filter(p => p.dataUrl);
+  const batch = pending.filter(p=>p.dataUrl);
   if (!batch.length) return;
   pending = []; renderPreviews();
 
@@ -501,62 +566,66 @@ async function runAnalysis() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
   document.getElementById('dropZone').style.display = 'none';
 
-  const statuses = batch.map(() => 'waiting');
-  showProgress(batch, statuses);
-
-  for (let i = 0; i < batch.length; i++) {
-    statuses[i] = 'analyzing'; showProgress(batch, statuses);
-    try {
-      const r = await callAI(batch[i]);
-      const entry = makeEntry(r, batch[i]);
-      inventory.unshift(entry);
-      DB.saveMeta(inventory);
-      updateCounts();
-      statuses[i] = 'done';
-    } catch(e) {
-      statuses[i] = 'error: ' + e.message;
-    }
-    showProgress(batch, statuses);
+  let tripId = null;
+  if (pendingTripSource) {
+    tripId = uid();
+    const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
+    trips.push({ id: tripId, num: tripNum, source: pendingTripSource, date: new Date().toISOString(), itemIds: [] });
+    DB.saveTrips(trips);
   }
 
-  btn.disabled = false; btn.innerHTML = 'Analyze with AI → add to inventory';
-  document.getElementById('dropZone').style.display = '';
-  document.getElementById('progressList').style.display = 'none';
+  const statuses = batch.map(()=>'waiting');
+  showProgress(batch, statuses);
 
-  const done = statuses.filter(s => s === 'done').length;
-  const errs = statuses.filter(s => s.startsWith('error')).length;
-  if (done) toast(`${done} item${done > 1 ? 's' : ''} added to inventory ✓`);
-  if (errs) toast(`${errs} item${errs > 1 ? 's' : ''} failed`);
+  for (let i=0; i<batch.length; i++) {
+    statuses[i]='analyzing'; showProgress(batch,statuses);
+    try {
+      const r = await callAI(batch[i]);
+      const entry = makeEntry(r, batch[i], tripId);
+      inventory.unshift(entry);
+      if (tripId) { const trip=trips.find(t=>t.id===tripId); if(trip) trip.itemIds.push(entry.id); DB.saveTrips(trips); }
+      DB.saveMeta(inventory);
+      statuses[i]='done';
+    } catch(e) { statuses[i]='error: '+e.message; }
+    showProgress(batch,statuses);
+  }
+
+  btn.disabled=false; btn.innerHTML='Analyze with AI → add to inventory';
+  document.getElementById('dropZone').style.display='';
+  document.getElementById('progressList').style.display='none';
+  pendingTripSource = null;
+
+  const done=statuses.filter(s=>s==='done').length;
+  const errs=statuses.filter(s=>s.startsWith('error')).length;
+  if (done) toast(`${done} item${done>1?'s':''} added ✓`);
+  if (errs) toast(`${errs} failed`);
   if (done) switchTab('inv');
 }
 
-async function callAI(img, extraNotes = '') {
+async function callAI(img, extraNotes='') {
   const b64 = img.dataUrl.split(',')[1];
+  const ctx = extraNotes ? '\n\nSeller context: '+extraNotes : '';
   const res = await fetch('/api/analyze', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imageData: b64, mediaType: 'image/jpeg', extraNotes, customPrompt: getPrompt() })
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ imageData: b64, mediaType: 'image/jpeg', extraNotes, customPrompt: getPrompt()+ctx })
   });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e?.error || `HTTP ${res.status}`);
-  }
+  if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e?.error||`HTTP ${res.status}`); }
   const parsed = await res.json();
-  const searchTerm = parsed.search_query || buildSearchQuery(parsed);
-  parsed.ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&LH_Sold=1&LH_Complete=1`;
-  parsed.ebayUrlActive = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&LH_Sold=0`;
+  const q = parsed.search_query || buildSearchQuery(parsed);
+  parsed.ebayUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(q)}&LH_Sold=1&LH_Complete=1`;
+  parsed.ebayUrlActive = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(q)}&LH_Sold=0`;
   return parsed;
 }
 
-function buildSearchQuery(parsed) {
-  const parts = [];
-  if (parsed.brand && parsed.brand !== 'Unknown') parts.push(parsed.brand);
-  if (parsed.model && parsed.model !== 'Unknown') parts.push(parsed.model);
-  if (parts.length < 2 && parsed.keywords && parsed.keywords[0]) parts.push(parsed.keywords[0]);
-  return parts.slice(0, 4).join(' ') || parsed.title.split(' ').slice(0, 3).join(' ');
+function buildSearchQuery(p) {
+  const parts=[];
+  if (p.brand&&p.brand!=='Unknown') parts.push(p.brand);
+  if (p.model&&p.model!=='Unknown') parts.push(p.model);
+  if (parts.length<2&&p.keywords?.[0]) parts.push(p.keywords[0]);
+  return parts.slice(0,4).join(' ')||p.title.split(' ').slice(0,3).join(' ');
 }
 
-function makeEntry(r, img) {
+function makeEntry(r, img, tripId=null) {
   const id = uid();
   DB.saveImage(id, img.dataUrl);
   return {
@@ -564,58 +633,49 @@ function makeEntry(r, img) {
     title: r.title, description: r.description,
     condition: r.condition, price: r.price_suggested,
     retail_price: r.retail_price,
+    cost: null,
     price_low: r.price_low, price_high: r.price_high,
     brand: r.brand, model: r.model,
-    category: r.category, keywords: r.keywords || [],
-    search_query: r.search_query || buildSearchQuery(r),
-    ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive || r.ebayUrl,
-    status: 'unlisted',
+    category: r.category, keywords: r.keywords||[],
+    search_query: r.search_query||buildSearchQuery(r),
+    ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive||r.ebayUrl,
+    status: 'unlisted', tripId,
     notes: [], history: [`Added via AI scan — ${now()}`],
     addedAt: new Date().toISOString()
   };
 }
 
 function showProgress(batch, statuses) {
-  const el = document.getElementById('progressList');
-  el.style.display = 'block';
-  el.className = 'progress-list';
-  el.innerHTML = batch.map((img, i) => {
-    const st = statuses[i];
-    const cls = st === 'done' ? 's-done' : st === 'analyzing' ? 's-run' : st.startsWith('error') ? 's-err' : 's-wait';
-    const lbl = st === 'done' ? '✓ added' : st === 'analyzing' ? '⟳ analyzing...' : st.startsWith('error') ? '✕ ' + st : '— waiting';
+  const el=document.getElementById('progressList'); el.style.display='block'; el.className='progress-list';
+  el.innerHTML = batch.map((img,i)=>{
+    const st=statuses[i], cls=st==='done'?'s-done':st==='analyzing'?'s-run':st.startsWith('error')?'s-err':'s-wait';
+    const lbl=st==='done'?'✓ added':st==='analyzing'?'⟳ analyzing...':st.startsWith('error')?'✕ '+st:'— waiting';
     return `<div class="prog-item"><img src="${img.dataUrl}" alt=""><span class="prog-name">${esc(img.name)}</span><span class="prog-status ${cls}">${lbl}</span></div>`;
   }).join('');
 }
 
 // ── INVENTORY ───────────────────────────────────────────────
 function renderInv() {
-  const q = document.getElementById('invSearch').value.toLowerCase();
-  const sort = document.getElementById('invSort').value;
-  const sf = document.getElementById('invSF').value;
-
-  let items = inventory.filter(it => {
-    if (sf !== 'all' && it.status !== sf) return false;
-    if (q) return [it.title, it.brand, it.category, it.model].some(v => (v||'').toLowerCase().includes(q));
+  const q=document.getElementById('invSearch')?.value.toLowerCase()||'';
+  const sort=document.getElementById('invSort')?.value||'newest';
+  const sf=document.getElementById('invSF')?.value||'all';
+  let items=inventory.filter(it=>{
+    if (sf!=='all'&&it.status!==sf) return false;
+    if (q) return [it.title,it.brand,it.category,it.model].some(v=>(v||'').toLowerCase().includes(q));
     return true;
   });
-
-  items = [...items].sort((a, b) =>
-    sort === 'newest' ? new Date(b.addedAt) - new Date(a.addedAt) :
-    sort === 'oldest' ? new Date(a.addedAt) - new Date(b.addedAt) :
-    sort === 'price-high' ? b.price - a.price : a.price - b.price
-  );
-
-  document.getElementById('invCt').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
-  const grid = document.getElementById('invGrid');
-
+  items=[...items].sort((a,b)=>sort==='newest'?new Date(b.addedAt)-new Date(a.addedAt):sort==='oldest'?new Date(a.addedAt)-new Date(b.addedAt):sort==='price-high'?b.price-a.price:a.price-b.price);
+  document.getElementById('invCt').textContent=`${items.length} item${items.length!==1?'s':''}`;
+  const grid=document.getElementById('invGrid');
   if (!items.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="ei">📦</div><p>${q ? 'No matches.' : 'No inventory yet. Hit the camera button to scan your first item.'}</p></div>`;
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="ei">📦</div><p>${q?'No matches.':'No inventory yet. Tap the camera to scan your first item.'}</p></div>`;
     return;
   }
-
-  grid.innerHTML = items.map(item => `
-    <div class="inv-card" onclick="openDetail('${item.id}')">
-      <img src="${item.dataUrl}" alt="${esc(item.title)}" loading="lazy">
+  grid.className='inv-grid'+(selectMode?' select-mode':'');
+  grid.innerHTML=items.map(item=>`
+    <div class="inv-card${selectedIds.has(item.id)?' selected':''}" onclick="cardClick('${item.id}')">
+      <img src="${item.dataUrl||''}" alt="${esc(item.title)}" loading="lazy">
+      <div class="select-check">${selectedIds.has(item.id)?'✓':''}</div>
       <div class="inv-body">
         <div class="inv-cond">${esc(item.condition)} · ${esc(item.category)}</div>
         <div class="inv-title" title="${esc(item.title)}">${esc(item.title)}</div>
@@ -626,39 +686,128 @@ function renderInv() {
     </div>`).join('');
 }
 
+// ── BULK SELECT ─────────────────────────────────────────────
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedIds.clear();
+  document.getElementById('selectBtn').textContent = selectMode ? 'Done' : 'Select';
+  document.getElementById('bulkBar').classList.toggle('open', selectMode);
+  renderInv();
+}
+function cardClick(id) {
+  if (!selectMode) { openDetail(id); return; }
+  if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  document.getElementById('bulkCt').textContent = `${selectedIds.size} selected`;
+  renderInv();
+}
+function bulkDelete() {
+  if (!selectedIds.size) return;
+  if (!confirm(`Delete ${selectedIds.size} item${selectedIds.size>1?'s':''}? Cannot be undone.`)) return;
+  selectedIds.forEach(id => { DB.deleteImage(id); const t=trips.find(tr=>tr.itemIds?.includes(id)); if(t){t.itemIds=t.itemIds.filter(i=>i!==id);} });
+  DB.saveTrips(trips);
+  inventory=inventory.filter(i=>!selectedIds.has(i.id));
+  DB.saveMeta(inventory);
+  selectedIds.clear(); toggleSelectMode(); toast('Deleted');
+}
+function bulkAssignTrip() {
+  if (!selectedIds.size) return;
+  const src = prompt('Trip source:\n1 Flea Market\n2 Storage Unit\n3 Estate Sale\n4 Local Marketplace\n5 Personal Connect\n\nOr type a number (1-5):');
+  const sources = ['Flea Market','Storage Unit','Estate Sale','Local Marketplace','Personal Connect'];
+  const chosen = sources[parseInt(src)-1];
+  if (!chosen) return;
+  const tripId = uid();
+  const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
+  const newTrip = { id: tripId, num: tripNum, source: chosen, date: new Date().toISOString(), itemIds: [...selectedIds] };
+  trips.push(newTrip);
+  inventory.forEach(item => { if (selectedIds.has(item.id)) item.tripId = tripId; });
+  DB.saveMeta(inventory); DB.saveTrips(trips);
+  selectedIds.clear(); toggleSelectMode(); toast(`Trip #${tripNum} created ✓`);
+}
+
+// ── TRIPS ───────────────────────────────────────────────────
+function renderTrips() {
+  const wrap = document.getElementById('tripsGrid');
+  if (!trips.length) {
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">🗺️</div><p>No trips yet. When you scan a batch of items you'll be asked if they're from the same trip.</p></div>`;
+    return;
+  }
+  const sorted=[...trips].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  wrap.innerHTML=sorted.map(trip=>{
+    const items=inventory.filter(i=>i.tripId===trip.id);
+    const totalCost=items.reduce((s,i)=>s+(i.cost||0),0);
+    const totalVal=items.reduce((s,i)=>s+(i.price||0),0);
+    return `<div class="trip-card" onclick="openTripDetail('${trip.id}')">
+      <div class="trip-header">
+        <span class="trip-num">Trip #${trip.num}</span>
+        <span class="trip-source">${esc(trip.source)}</span>
+      </div>
+      <div class="trip-date">${new Date(trip.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      <div class="trip-stats">
+        <div class="trip-stat"><span>${items.length}</span> items</div>
+        ${totalCost?`<div class="trip-stat">cost <span>$${totalCost.toFixed(2)}</span></div>`:''}
+        <div class="trip-stat">est. value <span>$${totalVal.toFixed(2)}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openTripDetail(id) {
+  const trip=trips.find(t=>t.id===id); if (!trip) return;
+  currentTripId=id;
+  document.getElementById('tripDetailTitle').textContent=`Trip #${trip.num} — ${trip.source}`;
+  const items=inventory.filter(i=>i.tripId===id);
+  const totalCost=items.reduce((s,i)=>s+(i.cost||0),0);
+  const totalVal=items.reduce((s,i)=>s+(i.price||0),0);
+  document.getElementById('tripDetailWrap').innerHTML=`
+    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="font-size:12px;color:var(--text2)">${new Date(trip.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+      ${totalCost?`<div style="font-size:12px;color:var(--text2)">Total cost: <strong>$${totalCost.toFixed(2)}</strong></div>`:''}
+      <div style="font-size:12px;color:var(--text2)">Est. value: <strong>$${totalVal.toFixed(2)}</strong></div>
+      ${totalCost&&totalVal?`<div style="font-size:12px;color:var(--green)">Profit est: <strong>$${(totalVal-totalCost).toFixed(2)}</strong></div>`:''}
+    </div>
+    <div class="inv-grid">${items.map(item=>`
+      <div class="inv-card" onclick="openDetail('${item.id}')">
+        <img src="${item.dataUrl||''}" alt="${esc(item.title)}" loading="lazy">
+        <div class="inv-body">
+          <div class="inv-title">${esc(item.title)}</div>
+          <div class="inv-price">$${(item.price||0).toFixed(2)}</div>
+          ${item.cost?`<div style="font-size:11px;color:var(--text3)">cost $${item.cost.toFixed(2)}</div>`:''}
+          <span class="inv-pill p-${item.status||'unlisted'}">${item.status||'unlisted'}</span>
+        </div>
+      </div>`).join('')||'<p style="color:var(--text3);font-size:13px">No items in this trip.</p>'}
+    </div>`;
+  document.getElementById('tripDetailPage').classList.add('open');
+}
+function closeTripDetail() { document.getElementById('tripDetailPage').classList.remove('open'); currentTripId=null; renderTrips(); }
+
 // ── DETAIL PAGE ─────────────────────────────────────────────
 function openDetail(id) {
-  const item = inventory.find(i => i.id === id); if (!item) return;
-  currentId = id;
-  document.getElementById('detailTitle').textContent = item.title;
+  const item=inventory.find(i=>i.id===id); if (!item) return;
+  currentId=id;
+  document.getElementById('detailTitle').textContent=item.title;
   buildDetail(item);
   document.getElementById('detailPage').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
-
-function closeDetail() {
-  document.getElementById('detailPage').classList.remove('open');
-  document.body.style.overflow = '';
-  currentId = null; renderInv();
-}
+function closeDetail() { document.getElementById('detailPage').classList.remove('open'); currentId=null; renderInv(); }
 
 function buildDetail(item) {
-  const notes = (item.notes || []).length
-    ? item.notes.map(n => `<div class="note-card"><p>${esc(n.text)}</p><div class="note-time">${n.time}</div></div>`).join('')
+  const trip = item.tripId ? trips.find(t=>t.id===item.tripId) : null;
+  const notes=(item.notes||[]).length
+    ? item.notes.map(n=>`<div class="note-card"><p>${esc(n.text)}</p><div class="note-time">${n.time}</div></div>`).join('')
     : '<p style="font-size:13px;color:var(--text3);margin-bottom:8px">No notes yet.</p>';
-  const hist = (item.history || []).map(h => `<div class="hist-item">${esc(h)}</div>`).join('');
-  const showUrl = item.status === 'listed' || item.status === 'sold';
-  const showSale = item.status === 'sold';
+  const hist=(item.history||[]).map(h=>`<div class="hist-item">${esc(h)}</div>`).join('');
+  const showUrl=item.status==='listed'||item.status==='sold';
+  const showSale=item.status==='sold';
 
-  document.getElementById('detailWrap').innerHTML = `
+  document.getElementById('detailWrap').innerHTML=`
     <div>
       <img class="detail-img" src="${item.dataUrl}" alt="">
       <div class="divider"></div>
-      <div class="sec-lbl">Re-run AI with extra context</div>
+      <div class="sec-lbl">Re-run AI</div>
       <div class="rerun-box">
-        <p>Add notes like model year, missing parts, damage, then re-analyze.</p>
+        <p>Add notes like model year, damage, or missing parts, then re-analyze.</p>
         <div class="rerun-row">
-          <textarea id="d-notes" placeholder="e.g. 2019 model, missing remote, cracked corner..."></textarea>
+          <textarea id="d-notes" placeholder="e.g. 2019 model, missing remote..."></textarea>
           <button class="btn btn-outline btn-sm" onclick="rerunAI()">Re-run</button>
         </div>
       </div>
@@ -670,11 +819,23 @@ function buildDetail(item) {
       <div class="two-col">
         <div class="field">
           <label class="lbl">List price ($)</label>
-          <input type="number" id="d-pr" value="${item.price}" step="0.01">
-          <div class="price-hint">AI range: $${item.price_low||'?'} – $${item.price_high||'?'} · Retail: $${item.retail_price||'?'}</div>
+          <input type="number" id="d-pr" value="${item.price||''}" step="0.01">
+          <div class="price-hint">Range: $${item.price_low||'?'} – $${item.price_high||'?'} · Retail: $${item.retail_price||'?'}</div>
         </div>
+        <div class="field">
+          <label class="lbl">Cost paid ($)</label>
+          <input type="number" id="d-cost" value="${item.cost||''}" step="0.01" placeholder="what you paid">
+        </div>
+      </div>
+      <div class="two-col">
         <div class="field"><label class="lbl">Condition</label>
           <select id="d-co">${['New','Like New','Very Good','Good','Acceptable','For Parts'].map(c=>`<option${c===item.condition?' selected':''}>${c}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label class="lbl">Trip</label>
+          <select id="d-trip">
+            <option value="">No trip</option>
+            ${trips.sort((a,b)=>b.num-a.num).map(t=>`<option value="${t.id}"${t.id===item.tripId?' selected':''}>Trip #${t.num} — ${t.source}</option>`).join('')}
+          </select>
         </div>
       </div>
       <div class="two-col">
@@ -683,7 +844,7 @@ function buildDetail(item) {
       </div>
       <div class="field"><label class="lbl">Category</label><input type="text" id="d-ca" value="${esc(item.category||'')}"></div>
       <div class="field">
-        <label class="lbl">eBay search query <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— edit for better comps</span></label>
+        <label class="lbl">eBay search query</label>
         <input type="text" id="d-sq" value="${esc(item.search_query||buildSearchQuery(item))}">
       </div>
       <div class="field"><label class="lbl">Status</label>
@@ -693,139 +854,127 @@ function buildDetail(item) {
           <option value="sold"${item.status==='sold'?' selected':''}>Sold</option>
         </select>
       </div>
-      ${showUrl ? `<div class="field"><label class="lbl">eBay listing URL</label><input type="text" id="d-lu" value="${esc(item.listingUrl||'')}" placeholder="https://ebay.com/itm/..."></div>` : ''}
-      ${showSale ? `<div class="field"><label class="lbl">Sale price ($)</label><input type="number" id="d-sp" value="${item.salePrice||''}" step="0.01"></div>` : ''}
+      ${showUrl?`<div class="field"><label class="lbl">eBay listing URL</label><input type="text" id="d-lu" value="${esc(item.listingUrl||'')}" placeholder="https://ebay.com/itm/..."></div>`:''}
+      ${showSale?`<div class="field"><label class="lbl">Sale price ($)</label><input type="number" id="d-sp" value="${item.salePrice||''}" step="0.01"></div>`:''}
       <div class="det-actions">
-        <button class="btn btn-dark" onclick="saveDetail()">Save changes</button>
+        <button class="btn btn-dark" onclick="saveDetail()">Save</button>
         <a class="btn ebay-btn" href="${item.ebayUrl}" target="_blank">Sold comps</a>
-        <a class="btn ebay-btn" href="${item.ebayUrlActive||item.ebayUrl.replace('LH_Sold=1&LH_Complete=1','LH_Sold=0')}" target="_blank">Active</a>
+        <a class="btn ebay-btn" href="${item.ebayUrlActive||item.ebayUrl}" target="_blank">Active</a>
       </div>
       <div class="divider"></div>
       <div class="sec-lbl">Notes</div>
-      <div>
-        ${notes}
-        <div class="add-note-row">
-          <input type="text" id="d-ni" placeholder="Add a note..." style="flex:1">
-          <button class="btn btn-outline btn-sm" onclick="addNote()">Add</button>
-        </div>
+      ${notes}
+      <div class="add-note-row">
+        <input type="text" id="d-ni" placeholder="Add a note..." style="flex:1">
+        <button class="btn btn-outline btn-sm" onclick="addNote()">Add</button>
       </div>
       <div class="divider"></div>
       <div class="sec-lbl">History</div>
-      <div>${hist || '<p style="font-size:13px;color:var(--text3)">No history.</p>'}</div>
+      ${hist||'<p style="font-size:13px;color:var(--text3)">No history.</p>'}
     </div>`;
 }
 
 function getCurrentItem() {
-  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return null;
-  const item = { ...inventory[idx] };
-  try { item.status = document.getElementById('d-st').value; } catch {}
+  const idx=inventory.findIndex(i=>i.id===currentId); if (idx===-1) return null;
+  const item={...inventory[idx]};
+  try { item.status=document.getElementById('d-st').value; } catch {}
   return item;
 }
 
 function saveDetail() {
-  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
-  const item = inventory[idx];
-  const newStatus = document.getElementById('d-st').value;
-  const changed = newStatus !== item.status;
-  const sq = document.getElementById('d-sq')?.value || item.search_query;
-  inventory[idx] = {
+  const idx=inventory.findIndex(i=>i.id===currentId); if (idx===-1) return;
+  const item=inventory[idx];
+  const newStatus=document.getElementById('d-st').value;
+  const changed=newStatus!==item.status;
+  const sq=document.getElementById('d-sq')?.value||item.search_query;
+  const newTripId=document.getElementById('d-trip')?.value||null;
+
+  // update trip memberships if changed
+  if (item.tripId!==newTripId) {
+    if (item.tripId) { const old=trips.find(t=>t.id===item.tripId); if(old) old.itemIds=old.itemIds.filter(i=>i!==item.id); }
+    if (newTripId) { const nw=trips.find(t=>t.id===newTripId); if(nw&&!nw.itemIds.includes(item.id)) nw.itemIds.push(item.id); }
+    DB.saveTrips(trips);
+  }
+
+  inventory[idx]={
     ...item,
     title: document.getElementById('d-ti').value,
     description: document.getElementById('d-de').value,
-    price: parseFloat(document.getElementById('d-pr').value) || 0,
+    price: parseFloat(document.getElementById('d-pr').value)||0,
+    cost: parseFloat(document.getElementById('d-cost')?.value)||null,
     condition: document.getElementById('d-co').value,
     brand: document.getElementById('d-br').value,
     model: document.getElementById('d-mo').value,
     category: document.getElementById('d-ca').value,
-    status: newStatus,
-    listingUrl: document.getElementById('d-lu')?.value || item.listingUrl,
-    salePrice: parseFloat(document.getElementById('d-sp')?.value) || item.salePrice,
+    status: newStatus, tripId: newTripId||null,
+    listingUrl: document.getElementById('d-lu')?.value||item.listingUrl,
+    salePrice: parseFloat(document.getElementById('d-sp')?.value)||item.salePrice,
     search_query: sq,
     ebayUrl: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(sq)}&LH_Sold=1&LH_Complete=1`,
     ebayUrlActive: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(sq)}&LH_Sold=0`,
     retail_price: item.retail_price,
-    history: [...(item.history||[]), `Edited — ${now()}${changed ? ' (status → ' + newStatus + ')' : ''}`]
+    history: [...(item.history||[]), `Edited — ${now()}${changed?' (status → '+newStatus+')':''}`]
   };
   DB.saveMeta(inventory);
-  document.getElementById('detailTitle').textContent = inventory[idx].title;
+  document.getElementById('detailTitle').textContent=inventory[idx].title;
   buildDetail(inventory[idx]);
   toast('Saved ✓');
 }
 
 async function rerunAI() {
-  const notes = document.getElementById('d-notes').value.trim();
-  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
-  const item = inventory[idx];
-  const btn = document.querySelector('.rerun-row .btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-dark"></span>';
+  const notes=document.getElementById('d-notes').value.trim();
+  const idx=inventory.findIndex(i=>i.id===currentId); if (idx===-1) return;
+  const item=inventory[idx];
+  const btn=document.querySelector('.rerun-row .btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner spinner-dark"></span>';
   try {
-    const r = await callAI({ dataUrl: item.dataUrl, type: 'image/jpeg' }, notes);
-    inventory[idx] = {
-      ...item,
-      title: r.title, description: r.description,
-      condition: r.condition, price: r.price_suggested,
-      price_low: r.price_low, price_high: r.price_high,
-      brand: r.brand, model: r.model,
-      retail_price: r.retail_price,
-      category: r.category, keywords: r.keywords || [],
-      search_query: r.search_query || buildSearchQuery(r),
-      ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive || r.ebayUrl,
-      history: [...(item.history||[]), `Re-analyzed${notes ? ' with notes: "' + notes + '"' : ''} — ${now()}`]
-    };
+    const r=await callAI({dataUrl:item.dataUrl,type:'image/jpeg'},notes);
+    inventory[idx]={...item,title:r.title,description:r.description,condition:r.condition,price:r.price_suggested,
+      price_low:r.price_low,price_high:r.price_high,brand:r.brand,model:r.model,retail_price:r.retail_price,
+      category:r.category,keywords:r.keywords||[],search_query:r.search_query||buildSearchQuery(r),
+      ebayUrl:r.ebayUrl,ebayUrlActive:r.ebayUrlActive||r.ebayUrl,
+      history:[...(item.history||[]),(notes?`Re-analyzed with notes: "${notes}"`:'Re-analyzed')+` — ${now()}`]};
     DB.saveMeta(inventory);
-    document.getElementById('detailTitle').textContent = inventory[idx].title;
-    buildDetail(inventory[idx]);
-    toast('Re-analysis done ✓');
-  } catch(e) {
-    toast('Error: ' + e.message);
-    btn.disabled = false; btn.textContent = 'Re-run';
-  }
+    document.getElementById('detailTitle').textContent=inventory[idx].title;
+    buildDetail(inventory[idx]); toast('Re-analysis done ✓');
+  } catch(e) { toast('Error: '+e.message); btn.disabled=false; btn.textContent='Re-run'; }
 }
 
 function addNote() {
-  const input = document.getElementById('d-ni');
-  const txt = input.value.trim(); if (!txt) return;
-  const idx = inventory.findIndex(i => i.id === currentId); if (idx === -1) return;
-  inventory[idx].notes = inventory[idx].notes || [];
-  inventory[idx].notes.push({ text: txt, time: now() });
+  const input=document.getElementById('d-ni'), txt=input.value.trim(); if (!txt) return;
+  const idx=inventory.findIndex(i=>i.id===currentId); if (idx===-1) return;
+  inventory[idx].notes=inventory[idx].notes||[];
+  inventory[idx].notes.push({text:txt,time:now()});
   DB.saveMeta(inventory); buildDetail(inventory[idx]); toast('Note added');
 }
 
 function deleteItem() {
   if (!confirm('Delete this item? Cannot be undone.')) return;
+  const item=inventory.find(i=>i.id===currentId);
+  if (item?.tripId) { const t=trips.find(tr=>tr.id===item.tripId); if(t) { t.itemIds=t.itemIds.filter(i=>i!==currentId); DB.saveTrips(trips); } }
   DB.deleteImage(currentId);
-  inventory = inventory.filter(i => i.id !== currentId);
-  DB.saveMeta(inventory); updateCounts(); closeDetail(); toast('Deleted');
+  inventory=inventory.filter(i=>i.id!==currentId);
+  DB.saveMeta(inventory); closeDetail(); toast('Deleted');
 }
 
 // ── UTILS ───────────────────────────────────────────────────
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2); }
 function now() { return new Date().toLocaleString(); }
 function esc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 let tt;
-function toast(msg) {
-  const el = document.getElementById('toast'); el.textContent = msg; el.style.display = 'block';
-  clearTimeout(tt); tt = setTimeout(() => el.style.display = 'none', 3000);
-}
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.style.display='block'; clearTimeout(tt); tt=setTimeout(()=>el.style.display='none',3000); }
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    if (document.getElementById('detailPage').classList.contains('open')) closeDetail();
-  }
+  if (e.key==='Escape') { if(document.getElementById('detailPage').classList.contains('open')) closeDetail(); else if(document.getElementById('tripDetailPage').classList.contains('open')) closeTripDetail(); }
 });
 
-// Swipe right from left edge to go back
-let swipeStartX = 0, swipeStartY = 0;
-document.getElementById('detailPage').addEventListener('touchstart', e => {
-  swipeStartX = e.touches[0].clientX;
-  swipeStartY = e.touches[0].clientY;
-}, { passive: true });
-document.getElementById('detailPage').addEventListener('touchend', e => {
-  const dx = e.changedTouches[0].clientX - swipeStartX;
-  const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY);
-  if (swipeStartX < 40 && dx > 60 && dy < 80) closeDetail();
-}, { passive: true });
+let swipeStartX=0, swipeStartY=0;
+['detailPage','tripDetailPage'].forEach(id => {
+  document.getElementById(id).addEventListener('touchstart', e=>{swipeStartX=e.touches[0].clientX;swipeStartY=e.touches[0].clientY;},{passive:true});
+  document.getElementById(id).addEventListener('touchend', e=>{const dx=e.changedTouches[0].clientX-swipeStartX,dy=Math.abs(e.changedTouches[0].clientY-swipeStartY);if(swipeStartX<40&&dx>60&&dy<80){if(id==='detailPage')closeDetail();else closeTripDetail();}},{passive:true});
+});
 
-initInventory();
+initApp();
 </script>
 </body>
 </html>
