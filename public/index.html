@@ -152,13 +152,19 @@ select { appearance: none; cursor: pointer; }
 /* trips */
 .trip-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.12s; box-shadow: var(--shadow); }
 .trip-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); }
-.trip-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.trip-num { font-size: 13px; font-weight: 600; }
-.trip-source { font-size: 12px; color: var(--blue); background: var(--blue-bg); border: 1px solid var(--blue-border); padding: 2px 8px; border-radius: 99px; }
+.trip-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.trip-num { font-size: 11px; color: var(--text3); font-weight: 500; }
+.trip-nickname { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.trip-source { font-size: 12px; color: var(--blue); background: var(--blue-bg); border: 1px solid var(--blue-border); padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
 .trip-date { font-size: 12px; color: var(--text3); }
-.trip-stats { display: flex; gap: 16px; margin-top: 8px; }
+.trip-stats { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
 .trip-stat { font-size: 12px; color: var(--text2); }
 .trip-stat span { font-weight: 600; color: var(--text); }
+.loc-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.loc-chip { padding: 5px 11px; border-radius: 99px; font-size: 12px; cursor: pointer; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); font-family: inherit; transition: all 0.12s; }
+.loc-chip:hover, .loc-chip.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.modal-divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--text3); font-size: 12px; }
+.modal-divider::before, .modal-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .trip-detail-page { position: fixed; inset: 0; background: var(--bg); z-index: 100; overflow-y: auto; display: none; }
 .trip-detail-page.open { display: block; }
 
@@ -330,15 +336,26 @@ select { appearance: none; cursor: pointer; }
   <button class="btn btn-ghost btn-sm" onclick="toggleSelectMode()">Cancel</button>
 </div>
 
-<!-- TRIP MODAL (pre-scan) -->
+<!-- TRIP MODAL (shared: pre-scan + bulk assign) -->
 <div class="modal-bg" id="tripModal">
   <div class="modal">
-    <h3>Group as a trip?</h3>
-    <p>You're scanning multiple items. Combine them into one trip to track where you got them.</p>
+    <h3 id="tripModalTitle">Group as a trip?</h3>
+    <p id="tripModalDesc">You're scanning multiple items. Combine them into one trip to track where you got them.</p>
+
+    <!-- existing trip picker (bulk only) -->
+    <div id="existingTripSection" style="display:none">
+      <div class="field">
+        <label class="lbl">Existing trip</label>
+        <select id="existingTripSelect"><option value="">— select a trip —</option></select>
+      </div>
+      <div class="modal-divider">or create new</div>
+    </div>
+
+    <!-- new trip fields -->
     <div class="field">
       <label class="lbl">Source</label>
       <select id="tripSourceModal">
-        <option value="">— skip, don't assign a trip —</option>
+        <option value="">— skip —</option>
         <option value="Flea Market">Flea Market</option>
         <option value="Storage Unit">Storage Unit</option>
         <option value="Estate Sale">Estate Sale</option>
@@ -346,9 +363,19 @@ select { appearance: none; cursor: pointer; }
         <option value="Personal Connect">Personal Connect</option>
       </select>
     </div>
+    <div class="field" id="nicknameField">
+      <label class="lbl">Nickname / Location</label>
+      <input type="text" id="tripNickname" placeholder="e.g. Uncle Ed's, Southside Swap...">
+      <div class="loc-chips" id="savedLocChips"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">Date</label>
+      <input type="date" id="tripDate">
+    </div>
+
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeTripModal(false)">Skip</button>
-      <button class="btn btn-dark" onclick="closeTripModal(true)">Confirm &amp; scan</button>
+      <button class="btn btn-outline" id="tripSkipBtn" onclick="closeTripModal(false)">Skip</button>
+      <button class="btn btn-dark" id="tripConfirmBtn" onclick="closeTripModal(true)">Confirm &amp; scan</button>
     </div>
   </div>
 </div>
@@ -458,22 +485,26 @@ const DB = {
   loadMeta() { try { return JSON.parse(localStorage.getItem('cicle_meta')||'[]'); } catch { return []; } },
   saveMeta(inv) { try { localStorage.setItem('cicle_meta', JSON.stringify(inv.map(({dataUrl,...r})=>r))); } catch(e){console.error(e);} },
   loadTrips() { try { return JSON.parse(localStorage.getItem('cicle_trips')||'[]'); } catch { return []; } },
-  saveTrips(trips) { try { localStorage.setItem('cicle_trips', JSON.stringify(trips)); } catch(e){console.error(e);} },
+  saveTrips(t) { try { localStorage.setItem('cicle_trips', JSON.stringify(t)); } catch(e){console.error(e);} },
+  loadLocations() { try { return JSON.parse(localStorage.getItem('cicle_locs')||'[]'); } catch { return []; } },
+  saveLocations(l) { try { localStorage.setItem('cicle_locs', JSON.stringify(l)); } catch(e){console.error(e);} },
   async saveImage(id, dataUrl) { try { await idbPut(id, dataUrl); } catch(e){console.error(e);} },
   async deleteImage(id) { try { await idbDelete(id); } catch(e){console.error(e);} },
   async loadImages(inv) { await Promise.all(inv.map(async item => { try { item.dataUrl = await idbGet(item.id)||null; } catch { item.dataUrl=null; } })); return inv; }
 };
 
 // ── STATE ───────────────────────────────────────────────────
-let pending = [], inventory = [], trips = [], currentId = null, currentTripId = null;
+let pending = [], inventory = [], trips = [], locations = [], currentId = null, currentTripId = null;
 let selectMode = false, selectedIds = new Set();
-let pendingTripSource = null;
+let pendingTrip = null; // { source, nickname, date } or null
+let tripModalMode = 'scan'; // 'scan' | 'bulk'
 
 async function initApp() {
   loadTheme();
   const meta = DB.loadMeta();
   inventory = await DB.loadImages(meta);
   trips = DB.loadTrips();
+  locations = DB.loadLocations();
   renderInv();
 }
 
@@ -537,23 +568,126 @@ function renderPreviews() {
 }
 function rmPending(i) { pending.splice(i,1); renderPreviews(); }
 
-// ── TRIP MODAL (pre-scan) ───────────────────────────────────
+// ── TRIP MODAL ──────────────────────────────────────────────
+function openTripModal(mode) {
+  tripModalMode = mode;
+  const isBulk = mode === 'bulk';
+
+  // title + desc
+  document.getElementById('tripModalTitle').textContent = isBulk ? 'Add to trip' : 'Group as a trip?';
+  document.getElementById('tripModalDesc').textContent = isBulk
+    ? `Assign ${selectedIds.size} selected item${selectedIds.size>1?'s':''} to an existing trip or create a new one.`
+    : "You're scanning multiple items. Combine them into one trip to track where you got them.";
+
+  // existing trips section (bulk only)
+  const existSec = document.getElementById('existingTripSection');
+  existSec.style.display = isBulk && trips.length ? 'block' : 'none';
+  if (isBulk && trips.length) {
+    const sel = document.getElementById('existingTripSelect');
+    sel.innerHTML = '<option value="">— select existing trip —</option>' +
+      [...trips].sort((a,b)=>b.num-a.num).map(t =>
+        `<option value="${t.id}">Trip #${t.num} — ${t.nickname||t.source} · ${new Date(t.date).toLocaleDateString()}</option>`
+      ).join('');
+  }
+
+  // skip button label
+  document.getElementById('tripSkipBtn').textContent = isBulk ? 'Cancel' : 'Skip';
+  document.getElementById('tripConfirmBtn').textContent = isBulk ? 'Assign' : 'Confirm & scan';
+
+  // reset new trip fields
+  document.getElementById('tripSourceModal').value = '';
+  document.getElementById('tripNickname').value = '';
+  document.getElementById('tripDate').value = new Date().toISOString().slice(0,10);
+  renderLocChips('');
+
+  document.getElementById('tripModal').classList.add('open');
+}
+
+function renderLocChips(filterSrc) {
+  const locs = filterSrc ? locations.filter(l=>l.source===filterSrc) : locations;
+  const unique = [...new Map(locs.map(l=>[l.nickname,l])).values()].slice(0,8);
+  const wrap = document.getElementById('savedLocChips');
+  wrap.innerHTML = unique.map(l =>
+    `<button class="loc-chip" onclick="pickLocChip('${esc(l.nickname)}')">${esc(l.nickname)}</button>`
+  ).join('');
+}
+
+document.getElementById('tripSourceModal').addEventListener('change', function() {
+  renderLocChips(this.value);
+});
+
+function pickLocChip(name) {
+  document.getElementById('tripNickname').value = name;
+  document.querySelectorAll('.loc-chip').forEach(c => c.classList.toggle('active', c.textContent === name));
+}
+
+function closeTripModal(doConfirm) {
+  document.getElementById('tripModal').classList.remove('open');
+  if (!doConfirm) {
+    if (tripModalMode === 'scan') { pendingTrip = null; runAnalysis(); }
+    return;
+  }
+
+  // check if assigning to existing trip (bulk mode)
+  const existingId = document.getElementById('existingTripSelect')?.value;
+  if (tripModalMode === 'bulk' && existingId) {
+    const trip = trips.find(t=>t.id===existingId);
+    if (trip) {
+      inventory.forEach(item => {
+        if (selectedIds.has(item.id)) {
+          if (item.tripId && item.tripId!==existingId) {
+            const old=trips.find(t=>t.id===item.tripId); if(old) old.itemIds=old.itemIds.filter(i=>i!==item.id);
+          }
+          item.tripId=existingId;
+          if (!trip.itemIds.includes(item.id)) trip.itemIds.push(item.id);
+        }
+      });
+      DB.saveMeta(inventory); DB.saveTrips(trips);
+      selectedIds.clear(); toggleSelectMode();
+      toast(`Added to Trip #${trip.num} ✓`);
+    }
+    return;
+  }
+
+  // create new trip
+  const src = document.getElementById('tripSourceModal').value;
+  const nickname = document.getElementById('tripNickname').value.trim();
+  const dateVal = document.getElementById('tripDate').value;
+  if (!src) {
+    if (tripModalMode === 'scan') { pendingTrip = null; runAnalysis(); }
+    return;
+  }
+
+  // save location for reuse
+  if (nickname && !locations.find(l=>l.source===src&&l.nickname===nickname)) {
+    locations.unshift({ source: src, nickname, addedAt: new Date().toISOString() });
+    if (locations.length > 50) locations = locations.slice(0,50);
+    DB.saveLocations(locations);
+  }
+
+  const tripData = { source: src, nickname: nickname||null, date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString() };
+
+  if (tripModalMode === 'scan') {
+    pendingTrip = tripData;
+    runAnalysis();
+  } else {
+    // bulk — create trip and assign
+    const tripId = uid();
+    const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
+    const newTrip = { id: tripId, num: tripNum, ...tripData, itemIds: [...selectedIds] };
+    trips.push(newTrip);
+    inventory.forEach(item => { if (selectedIds.has(item.id)) item.tripId = tripId; });
+    DB.saveMeta(inventory); DB.saveTrips(trips);
+    selectedIds.clear(); toggleSelectMode();
+    toast(`Trip #${tripNum} created ✓`);
+  }
+}
+
 function startAnalysis() {
   const batch = pending.filter(p=>p.dataUrl);
   if (!batch.length) return;
-  if (batch.length > 1) {
-    document.getElementById('tripSourceModal').value = '';
-    document.getElementById('tripModal').classList.add('open');
-  } else {
-    pendingTripSource = null;
-    runAnalysis();
-  }
-}
-function closeTripModal(confirm) {
-  const src = document.getElementById('tripSourceModal').value;
-  pendingTripSource = (confirm && src) ? src : null;
-  document.getElementById('tripModal').classList.remove('open');
-  runAnalysis();
+  if (batch.length > 1) openTripModal('scan');
+  else { pendingTrip = null; runAnalysis(); }
 }
 
 // ── AI ANALYSIS ─────────────────────────────────────────────
@@ -711,17 +845,7 @@ function bulkDelete() {
 }
 function bulkAssignTrip() {
   if (!selectedIds.size) return;
-  const src = prompt('Trip source:\n1 Flea Market\n2 Storage Unit\n3 Estate Sale\n4 Local Marketplace\n5 Personal Connect\n\nOr type a number (1-5):');
-  const sources = ['Flea Market','Storage Unit','Estate Sale','Local Marketplace','Personal Connect'];
-  const chosen = sources[parseInt(src)-1];
-  if (!chosen) return;
-  const tripId = uid();
-  const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
-  const newTrip = { id: tripId, num: tripNum, source: chosen, date: new Date().toISOString(), itemIds: [...selectedIds] };
-  trips.push(newTrip);
-  inventory.forEach(item => { if (selectedIds.has(item.id)) item.tripId = tripId; });
-  DB.saveMeta(inventory); DB.saveTrips(trips);
-  selectedIds.clear(); toggleSelectMode(); toast(`Trip #${tripNum} created ✓`);
+  openTripModal('bulk');
 }
 
 // ── TRIPS ───────────────────────────────────────────────────
@@ -741,6 +865,7 @@ function renderTrips() {
         <span class="trip-num">Trip #${trip.num}</span>
         <span class="trip-source">${esc(trip.source)}</span>
       </div>
+      ${trip.nickname?`<div class="trip-nickname">${esc(trip.nickname)}</div>`:''}
       <div class="trip-date">${new Date(trip.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
       <div class="trip-stats">
         <div class="trip-stat"><span>${items.length}</span> items</div>
@@ -754,13 +879,19 @@ function renderTrips() {
 function openTripDetail(id) {
   const trip=trips.find(t=>t.id===id); if (!trip) return;
   currentTripId=id;
-  document.getElementById('tripDetailTitle').textContent=`Trip #${trip.num} — ${trip.source}`;
+  const titleParts = [`Trip #${trip.num}`, trip.nickname || trip.source];
+  document.getElementById('tripDetailTitle').textContent = titleParts.join(' — ');
   const items=inventory.filter(i=>i.tripId===id);
   const totalCost=items.reduce((s,i)=>s+(i.cost||0),0);
   const totalVal=items.reduce((s,i)=>s+(i.price||0),0);
   document.getElementById('tripDetailWrap').innerHTML=`
-    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      ${trip.nickname?`<div style="font-size:13px;font-weight:600;color:var(--text1)">${esc(trip.nickname)}</div><div style="font-size:12px;color:var(--text3)">·</div>`:''}
+      <div style="font-size:12px;color:var(--text2)">${esc(trip.source)}</div>
+      <div style="font-size:12px;color:var(--text3)">·</div>
       <div style="font-size:12px;color:var(--text2)">${new Date(trip.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
       ${totalCost?`<div style="font-size:12px;color:var(--text2)">Total cost: <strong>$${totalCost.toFixed(2)}</strong></div>`:''}
       <div style="font-size:12px;color:var(--text2)">Est. value: <strong>$${totalVal.toFixed(2)}</strong></div>
       ${totalCost&&totalVal?`<div style="font-size:12px;color:var(--green)">Profit est: <strong>$${(totalVal-totalCost).toFixed(2)}</strong></div>`:''}
