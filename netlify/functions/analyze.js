@@ -44,17 +44,20 @@ async function getGoogleVisionContext(imageBase64) {
     if (!web) return { ctx: '', debug: { error: 'no webDetection', raw: visionData } };
 
     const rawBest = web.bestGuessLabels?.[0]?.label || '';
-    const JUNK = /^(concrete|fabric|wood|grass|floor|wall|surface|ground|material|texture|pattern|background|carpet|tile|metal|plastic|rubber|leather|paper|stone|brick|asphalt|pavement|sidewalk|road|street)$/i;
+    const JUNK = /^(concrete|fabric|wood|grass|floor|wall|surface|ground|material|texture|pattern|background|carpet|tile|metal|plastic|rubber|leather|paper|stone|brick|asphalt|pavement|sidewalk|road|street|sneaker|shoe|footwear|clothing|apparel)$/i;
     const bestGuess = JUNK.test(rawBest.trim()) ? '' : rawBest;
-    const entities = (web.webEntities || []).filter(e => e.score > 0.5 && e.description).map(e => e.description).join(', ');
-    const pageTitle = web.pagesWithMatchingImages?.[0]?.pageTitle || '';
+    const entities = (web.webEntities || []).filter(e => e.score > 0.4 && e.description).map(e => e.description).join(', ');
+    const pageTitles = (web.pagesWithMatchingImages || [])
+      .filter(p => p.pageTitle)
+      .slice(0, 3)
+      .map(p => p.pageTitle);
 
-    let ctx = '\n\nPRODUCT IDENTIFICATION via Google Vision (highly reliable — anchor your response to this):\n';
+    let ctx = '\n\nPRODUCT IDENTIFICATION via Google Vision:\n';
     if (bestGuess) ctx += `Best match: ${bestGuess}\n`;
-    if (entities) ctx += `Entities: ${entities}\n`;
-    if (pageTitle) ctx += `Matched page: ${pageTitle}\n`;
-    ctx += 'Use the above to fill title, brand, model, and search_query accurately. If the best match includes a colorway name, use it exactly.';
-    return { ctx, debug: { bestGuess: rawBest, bestGuessUsed: bestGuess || '(filtered)', entities, pageTitle } };
+    if (entities) ctx += `Detected: ${entities}\n`;
+    if (pageTitles.length) ctx += `Matched pages:\n${pageTitles.map(t=>`  - ${t}`).join('\n')}\n`;
+    ctx += 'Extract the most specific product name, colorway, and brand from the above. Use exact colorway names if present (e.g. "White Hyacinth", "University Red"). If no useful product info above, rely on the image alone.';
+    return { ctx, debug: { bestGuess: rawBest, bestGuessUsed: bestGuess || '(filtered)', entities, pageTitles } };
   } catch (e) {
     console.error('Vision API error:', e.message);
     return { ctx: '', debug: { error: e.message } };
