@@ -395,8 +395,38 @@ select { appearance: none; cursor: pointer; }
   <div class="detail-bar">
     <button class="btn btn-ghost btn-sm" onclick="closeTripDetail()">← back</button>
     <h2 id="tripDetailTitle"></h2>
+    <button class="btn btn-ghost btn-sm" onclick="openTripEdit()" style="margin-left:auto">Edit</button>
   </div>
   <div style="padding:16px" id="tripDetailWrap"></div>
+</div>
+
+<!-- TRIP EDIT MODAL -->
+<div class="modal-bg" id="tripEditModal">
+  <div class="modal">
+    <h3>Edit Trip</h3>
+    <div class="field">
+      <label class="lbl">Source</label>
+      <select id="editTripSource">
+        <option value="Flea Market">Flea Market</option>
+        <option value="Storage Unit">Storage Unit</option>
+        <option value="Estate Sale">Estate Sale</option>
+        <option value="Local Marketplace">Local Marketplace</option>
+        <option value="Personal Connect">Personal Connect</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl">Nickname / Location</label>
+      <input type="text" id="editTripNickname" placeholder="e.g. Uncle Ed's, Southside Swap...">
+    </div>
+    <div class="field">
+      <label class="lbl">Date</label>
+      <input type="date" id="editTripDate">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeTripEdit(false)">Cancel</button>
+      <button class="btn btn-dark" onclick="closeTripEdit(true)">Save</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -701,11 +731,15 @@ async function runAnalysis() {
   document.getElementById('dropZone').style.display = 'none';
 
   let tripId = null;
-  if (pendingTripSource) {
-    tripId = uid();
-    const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
-    trips.push({ id: tripId, num: tripNum, source: pendingTripSource, date: new Date().toISOString(), itemIds: [] });
-    DB.saveTrips(trips);
+  if (pendingTrip) {
+    if (pendingTrip.id) {
+      tripId = pendingTrip.id;
+    } else {
+      tripId = uid();
+      const tripNum = (trips.length ? Math.max(...trips.map(t=>t.num)) : 0) + 1;
+      trips.push({ id: tripId, num: tripNum, source: pendingTrip.source, nickname: pendingTrip.nickname||null, date: pendingTrip.date||new Date().toISOString(), itemIds: [] });
+      DB.saveTrips(trips);
+    }
   }
 
   const statuses = batch.map(()=>'waiting');
@@ -727,7 +761,7 @@ async function runAnalysis() {
   btn.disabled=false; btn.innerHTML='Analyze with AI → add to inventory';
   document.getElementById('dropZone').style.display='';
   document.getElementById('progressList').style.display='none';
-  pendingTripSource = null;
+  pendingTrip = null;
 
   const done=statuses.filter(s=>s==='done').length;
   const errs=statuses.filter(s=>s.startsWith('error')).length;
@@ -910,6 +944,38 @@ function openTripDetail(id) {
   document.getElementById('tripDetailPage').classList.add('open');
 }
 function closeTripDetail() { document.getElementById('tripDetailPage').classList.remove('open'); currentTripId=null; renderTrips(); }
+
+function saveLocation(source, nickname) {
+  if (!nickname) return;
+  if (!locations.find(l=>l.source===source&&l.nickname===nickname)) {
+    locations.unshift({ source, nickname, addedAt: new Date().toISOString() });
+    if (locations.length > 50) locations = locations.slice(0,50);
+    DB.saveLocations(locations);
+  }
+}
+
+function openTripEdit() {
+  const trip = trips.find(t=>t.id===currentTripId); if (!trip) return;
+  document.getElementById('editTripSource').value = trip.source || 'Flea Market';
+  document.getElementById('editTripNickname').value = trip.nickname || '';
+  document.getElementById('editTripDate').value = trip.date ? trip.date.split('T')[0] : new Date().toISOString().split('T')[0];
+  document.getElementById('tripEditModal').classList.add('open');
+}
+
+function closeTripEdit(save) {
+  document.getElementById('tripEditModal').classList.remove('open');
+  if (!save) return;
+  const trip = trips.find(t=>t.id===currentTripId); if (!trip) return;
+  trip.source = document.getElementById('editTripSource').value;
+  trip.nickname = document.getElementById('editTripNickname').value.trim();
+  trip.date = new Date(document.getElementById('editTripDate').value).toISOString();
+  if (trip.nickname) saveLocation(trip.source, trip.nickname);
+  DB.saveTrips(trips);
+  const titleParts = [`Trip #${trip.num}`, trip.nickname || trip.source];
+  document.getElementById('tripDetailTitle').textContent = titleParts.join(' — ');
+  openTripDetail(currentTripId);
+  toast('Trip updated ✓');
+}
 
 // ── DETAIL PAGE ─────────────────────────────────────────────
 function openDetail(id) {
