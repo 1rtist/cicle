@@ -1,9 +1,69 @@
 require('dotenv').config();
 const express = require('express');
+const crypto = require('crypto');
 const app = express();
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static('public'));
+
+async function getGoogleVisionContext(imageBase64) {
+  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  const privateKeyB64 = process.env.GOOGLE_PRIVATE_KEY_B64;
+  if (!clientEmail || !privateKeyB64) return '';
+  try {
+    const privateKey = Buffer.from(privateKeyB64, 'base64').toString('utf8');
+    const now = Math.floor(Date.now() / 1000);
+    const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
+    const payload = Buffer.from(JSON.stringify({
+      iss: clientEmail,
+      scope: 'https://www.googleapis.com/auth/cloud-vision',
+      aud: 'https://oauth2.googleapis.com/token',
+      exp: now + 3600,
+      iat: now
+    })).toString('base64url');
+    const sigInput = `${header}.${payload}`;
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(sigInput);
+    const sig = sign.sign(privateKey, 'base64url');
+    const jwt = `${sigInput}.${sig}`;
+
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
+    });
+    const { access_token } = await tokenRes.json();
+    if (!access_token) return '';
+
+    const visionRes = await fetch('https://vision.googleapis.com/v1/images:annotate', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: imageBase64 },
+          features: [{ type: 'WEB_DETECTION', maxResults: 10 }]
+        }]
+      })
+    });
+    const visionData = await visionRes.json();
+    const web = visionData.responses?.[0]?.webDetection;
+    if (!web) return '';
+
+    const bestGuess = web.bestGuessLabels?.[0]?.label || '';
+    const entities = (web.webEntities || []).filter(e => e.score > 0.5 && e.description).map(e => e.description).join(', ');
+    const pageTitle = web.pagesWithMatchingImages?.[0]?.pageTitle || '';
+
+    let ctx = '\n\nPRODUCT IDENTIFICATION via Google Vision (highly reliable — anchor your response to this):\n';
+    if (bestGuess) ctx += `Best match: ${bestGuess}\n`;
+    if (entities) ctx += `Entities: ${entities}\n`;
+    if (pageTitle) ctx += `Matched page: ${pageTitle}\n`;
+    ctx += 'Use the above to fill title, brand, model, and search_query accurately. If the best match includes a colorway name, use it exactly.';
+    return ctx;
+  } catch (e) {
+    console.error('Vision API error:', e.message);
+    return '';
+  }
+}
 
 app.post('/api/analyze', async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -12,7 +72,8 @@ app.post('/api/analyze', async (req, res) => {
   const { imageData, mediaType, extraNotes, customPrompt } = req.body;
   if (!imageData) return res.status(400).json({ error: 'imageData required' });
 
-  const ctx = extraNotes ? `\n\nSeller context: ${extraNotes}` : '';
+  const sellerCtx = extraNotes ? `\n\nSeller context: ${extraNotes}` : '';
+  const visionCtx = await getGoogleVisionContext(imageData);
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
@@ -59,7 +120,7 @@ RETAIL PRICE — use your knowledge of the brand and item to estimate what this 
   "model": "specific model, colorway, collection, or style name if visible, else Unknown",
   "search_query": "3-5 words: brand + item type + key style identifier. Must be specific enough for good eBay comps.",
   "keywords": ["4 to 6 specific search keywords including brand"]
-}`) + ctx }
+}`) + visionCtx + sellerCtx }
           ]
         }]
       })
