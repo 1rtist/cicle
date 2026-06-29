@@ -9,7 +9,7 @@ app.use(express.static('public'));
 async function getGoogleVisionContext(imageBase64) {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
   const privateKeyB64 = process.env.GOOGLE_PRIVATE_KEY_B64;
-  if (!clientEmail || !privateKeyB64) return '';
+  if (!clientEmail || !privateKeyB64) return { ctx: '', debug: null };
   try {
     const privateKey = Buffer.from(privateKeyB64, 'base64').toString('utf8');
     const now = Math.floor(Date.now() / 1000);
@@ -33,7 +33,7 @@ async function getGoogleVisionContext(imageBase64) {
       body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`
     });
     const { access_token } = await tokenRes.json();
-    if (!access_token) return '';
+    if (!access_token) return { ctx: '', debug: { error: 'no access token' } };
 
     const visionRes = await fetch('https://vision.googleapis.com/v1/images:annotate', {
       method: 'POST',
@@ -47,7 +47,7 @@ async function getGoogleVisionContext(imageBase64) {
     });
     const visionData = await visionRes.json();
     const web = visionData.responses?.[0]?.webDetection;
-    if (!web) return '';
+    if (!web) return { ctx: '', debug: { error: 'no webDetection in response', raw: visionData } };
 
     const bestGuess = web.bestGuessLabels?.[0]?.label || '';
     const entities = (web.webEntities || []).filter(e => e.score > 0.5 && e.description).map(e => e.description).join(', ');
@@ -58,10 +58,10 @@ async function getGoogleVisionContext(imageBase64) {
     if (entities) ctx += `Entities: ${entities}\n`;
     if (pageTitle) ctx += `Matched page: ${pageTitle}\n`;
     ctx += 'Use the above to fill title, brand, model, and search_query accurately. If the best match includes a colorway name, use it exactly.';
-    return ctx;
+    return { ctx, debug: { bestGuess, entities, pageTitle } };
   } catch (e) {
     console.error('Vision API error:', e.message);
-    return '';
+    return { ctx: '', debug: { error: e.message } };
   }
 }
 
@@ -73,7 +73,7 @@ app.post('/api/analyze', async (req, res) => {
   if (!imageData) return res.status(400).json({ error: 'imageData required' });
 
   const sellerCtx = extraNotes ? `\n\nSeller context: ${extraNotes}` : '';
-  const visionCtx = await getGoogleVisionContext(imageData);
+  const { ctx: visionCtx, debug: visionDebug } = await getGoogleVisionContext(imageData);
 
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
@@ -134,6 +134,7 @@ RETAIL PRICE — use your knowledge of the brand and item to estimate what this 
     const data = await upstream.json();
     const txt = data.content.filter(c => c.type === 'text').map(c => c.text).join('');
     const parsed = JSON.parse(txt.replace(/```json|```/g, '').trim());
+    parsed._vision = visionDebug;
     res.json(parsed);
   } catch (err) {
     res.status(500).json({ error: err.message });

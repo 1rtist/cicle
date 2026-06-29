@@ -808,6 +808,7 @@ function makeEntry(r, img, tripId=null) {
     search_query: r.search_query||buildSearchQuery(r),
     ebayUrl: r.ebayUrl, ebayUrlActive: r.ebayUrlActive||r.ebayUrl,
     status: 'unlisted', tripId,
+    _vision: r._vision || null,
     notes: [], history: [`Added via AI scan — ${now()}`],
     addedAt: new Date().toISOString()
   };
@@ -1039,6 +1040,7 @@ function buildDetail(item) {
         <div class="field"><label class="lbl">Brand</label><input type="text" id="d-br" value="${esc(item.brand||'')}"></div>
         <div class="field"><label class="lbl">Model</label><input type="text" id="d-mo" value="${esc(item.model||'')}"></div>
       </div>
+      ${item._vision ? `<div class="field" style="background:var(--bg2);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text2)"><span style="font-weight:600;color:var(--accent)">Vision ID:</span> ${item._vision.error ? '⚠ '+esc(item._vision.error) : esc(item._vision.bestGuess||'(no best guess)') + (item._vision.entities ? ' · '+esc(item._vision.entities) : '')}</div>` : ''}
       <div class="field"><label class="lbl">Category</label><input type="text" id="d-ca" value="${esc(item.category||'')}"></div>
       <div class="field">
         <label class="lbl">eBay search query</label>
