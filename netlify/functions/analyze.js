@@ -43,7 +43,9 @@ async function getGoogleVisionContext(imageBase64) {
     const web = visionData.responses?.[0]?.webDetection;
     if (!web) return { ctx: '', debug: { error: 'no webDetection', raw: visionData } };
 
-    const bestGuess = web.bestGuessLabels?.[0]?.label || '';
+    const rawBest = web.bestGuessLabels?.[0]?.label || '';
+    const JUNK = /^(concrete|fabric|wood|grass|floor|wall|surface|ground|material|texture|pattern|background|carpet|tile|metal|plastic|rubber|leather|paper|stone|brick|asphalt|pavement|sidewalk|road|street)$/i;
+    const bestGuess = JUNK.test(rawBest.trim()) ? '' : rawBest;
     const entities = (web.webEntities || []).filter(e => e.score > 0.5 && e.description).map(e => e.description).join(', ');
     const pageTitle = web.pagesWithMatchingImages?.[0]?.pageTitle || '';
 
@@ -52,7 +54,7 @@ async function getGoogleVisionContext(imageBase64) {
     if (entities) ctx += `Entities: ${entities}\n`;
     if (pageTitle) ctx += `Matched page: ${pageTitle}\n`;
     ctx += 'Use the above to fill title, brand, model, and search_query accurately. If the best match includes a colorway name, use it exactly.';
-    return { ctx, debug: { bestGuess, entities, pageTitle } };
+    return { ctx, debug: { bestGuess: rawBest, bestGuessUsed: bestGuess || '(filtered)', entities, pageTitle } };
   } catch (e) {
     console.error('Vision API error:', e.message);
     return { ctx: '', debug: { error: e.message } };
